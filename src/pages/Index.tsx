@@ -645,10 +645,13 @@ const Index = () => {
       }
 
       console.log(`🚀 Generating ${phase} insight with context:`, requestBody);
+      console.log('📡 About to call edge function...');
 
       const { data, error } = await supabase.functions.invoke("generate-daily-insight", {
         body: requestBody,
       });
+
+      console.log('📥 Edge function response:', { data, error, hasData: !!data, dataKeys: data ? Object.keys(data) : [] });
 
       if (error) {
         console.error("❌ Edge function error:", error);
@@ -667,8 +670,8 @@ const Index = () => {
         return;
       }
 
-      if (!data) {
-        console.error("❌ No data returned from edge function");
+      if (!data || Object.keys(data).length === 0) {
+        console.error("❌ No data or empty data returned from edge function");
         toast.error("No insight generated. Please try again.");
         return;
       }
@@ -686,7 +689,9 @@ const Index = () => {
           completed_action_items: newCompletedItems
         });
       } else {
+        console.log('💾 About to save midday insight to database...', data);
         await updateLog({ midday_insight: data });
+        console.log('✅ Midday insight saved to state');
       }
       
       toast.success(`${phase === "morning" ? "Daily" : "Midday"} insight generated!`);
