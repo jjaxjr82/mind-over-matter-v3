@@ -247,9 +247,9 @@ export const useScheduleManager = () => {
       ]);
       
       // Insert all schedules with valid data only
+      // Note: work_mode is stored in tags array to avoid constraint issues with external DB
       const insertData = Object.values(schedules).map((schedule) => ({
         day_of_week: schedule.day_of_week,
-        work_mode: schedule.work_mode,
         tags: [schedule.work_mode, ...schedule.focus_areas],
         description: '',
         user_id: user.id,
