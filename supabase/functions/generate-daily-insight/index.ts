@@ -80,13 +80,15 @@ Generate a structured daily insight in JSON format with these exact fields:
 }
 
 Recommendations Guidelines:
-- Provide 2-3 high-quality recommendations
-- If major situation present: Prioritize resources for that specific life event (divorce recovery podcasts, grief counseling articles, career transition guides, etc.)
-- If no major situation: Base recommendations on their active challenges and wisdom sources
-- Consider their work mode, energy level, and focus areas
-- Suggest real, actionable content from trusted sources
-- Vary between quick reads (5-10 min) and longer podcasts (30-60 min)
-- Make each recommendation directly relevant to their situation
+- Provide 2-3 SHORT, CONSUMABLE recommendations ONLY
+- NEVER recommend full books - the user wants quick wins, not reading lists
+- Article recommendations: 5-15 minute reads MAX (blog posts, essays, magazine articles)
+- Podcast recommendations: 20-30 minute episodes MAX (specific episodes, not entire shows)
+- If major situation present: Prioritize SHORT resources for that life event (10-min divorce recovery article, 20-min grief podcast episode)
+- If no major situation: Base on challenges and wisdom sources, but keep it BRIEF
+- Consider their work mode and energy level - they need bite-sized content
+- Suggest real, specific content (not "read Meditations" but "read this 8-minute Daily Stoic article on...")
+- Each recommendation must be directly relevant and actually consumable today
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
     } else {
@@ -139,7 +141,7 @@ Guidelines:
 - Help them refocus and prioritize for the remaining day
 - Reference morning action items if relevant
 - Keep tone supportive and energizing (but grounded if major situation present)
-- Provide 1-2 recommendations for afternoon listening/reading to support momentum and focus (prioritize situation-relevant resources if major situation present)
+- Provide 1-2 SHORT recommendations for afternoon listening/reading to support momentum and focus (5-15 min reads or 20-30 min listens MAX, prioritize situation-relevant resources if major situation present)
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
     }
