@@ -21,7 +21,7 @@ serve(async (req) => {
       );
     }
 
-    const { phase = "morning", challenges, wisdomSources, schedule, workMode, energyLevel, focusAreas, situation, morningInsight, middayReflection } = await req.json();
+    const { phase = "morning", challenges, wisdomSources, schedule, workMode, energyLevel, focusAreas, situation, morningInsight, middayReflection, win, weakness, tomorrowsPrep } = await req.json();
 
     let systemPrompt = '';
     
@@ -91,7 +91,7 @@ Recommendations Guidelines:
 - Each recommendation must be directly relevant and actually consumable today
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
-    } else {
+    } else if (phase === "midday") {
       // Midday insight
       systemPrompt = `You are a personal growth advisor. The user is at midday and has shared their reflection. Generate a supportive midday insight to help them adjust and finish strong.
 
@@ -142,6 +142,56 @@ Guidelines:
 - Reference morning action items if relevant
 - Keep tone supportive and energizing (but grounded if major situation present)
 - Provide 1-2 SHORT recommendations for afternoon listening/reading to support momentum and focus (5-15 min reads or 20-30 min listens MAX, prioritize situation-relevant resources if major situation present)
+
+Return ONLY valid JSON, no markdown, no code blocks.`;
+    } else if (phase === "evening") {
+      // Evening insight
+      systemPrompt = `You are a personal growth advisor. The user has completed their day and submitted their evening reflection. Generate a supportive evening insight to help them process the day and prepare for tomorrow.
+
+CRITICAL CONTEXT - MAJOR SITUATION:
+Current Situation: ${situation}
+
+IMPORTANT: If this situation involves a major life event (divorce, separation, death, job loss, health crisis), acknowledge this in your reflection. Major life transitions require ongoing compassion and realistic expectations.
+
+Today's Context:
+- Morning Insight: ${JSON.stringify(morningInsight)}
+- Focus Areas: ${focusAreas}
+- Work Mode: ${workMode}
+- Energy Level: ${energyLevel}
+
+Evening Reflection:
+- Today's Win: ${win}
+- Growth Area: ${weakness}
+- Tomorrow's Prep: ${tomorrowsPrep}
+
+Generate a JSON response with these exact fields:
+{
+  "title": "Evening Insight",
+  "quote": {
+    "text": "A reflective quote about growth, learning, or rest (MUST relate to major situation if present)",
+    "author": "Quote author"
+  },
+  "analysis": "2-3 paragraphs analyzing their day based on their win, growth area, and major situation (if present). Celebrate wins, reframe growth areas constructively, and provide compassionate perspective on their journey. If major situation present: acknowledge the courage it takes to keep going.",
+  "tomorrowsFocus": "One key focus for tomorrow based on their reflection and context (be realistic about capacity if major situation present)",
+  "carryThis": "One single-sentence mantra for restful recovery (provide comfort if major situation present)",
+  "recommendations": [
+    {
+      "type": "article or podcast",
+      "title": "Specific title of evening-friendly content (calming, reflective)",
+      "description": "Why this supports evening wind-down and tomorrow's preparation (relate to major situation if present)",
+      "estimatedTime": "5-10 min read or 15-20 min listen"
+    }
+  ]
+}
+
+Guidelines:
+- Acknowledge and celebrate their wins, no matter how small (especially important if major situation present)
+- Reframe their growth areas as opportunities, not failures
+- If major situation present: Be deeply compassionate, acknowledge the difficulty of showing up each day
+- Help them feel closure on today and hopeful about tomorrow
+- Keep tone warm, reflective, and restorative
+- Provide 1-2 SHORT evening-appropriate recommendations for reflection or calm (5-10 min reads or 15-20 min listens MAX, prioritize situation-relevant resources if major situation present)
+- Focus on rest, recovery, and gentle preparation rather than more action
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
     }

@@ -70,6 +70,7 @@ interface DailyLog {
   midday_insight?: any;
   midday_adjustment: string;
   midday_follow_up: any[];
+  evening_insight?: any;
   win: string;
   weakness: string;
   tomorrows_prep: string;
@@ -659,6 +660,7 @@ const Index = () => {
         .from("daily_logs")
         .update({
           evening_complete: false,
+          evening_insight: null,
           win: "",
           weakness: "",
           tomorrows_prep: ""
@@ -792,7 +794,7 @@ const Index = () => {
     }
   };
 
-  const generateDailyInsight = async (phase: "morning" | "midday" = "morning") => {
+  const generateDailyInsight = async (phase: "morning" | "midday" | "evening" = "morning") => {
     setIsGenerating(true);
     try {
       const today = new Date().toLocaleString("en-us", { weekday: "long" });
@@ -864,6 +866,11 @@ const Index = () => {
       if (phase === "midday") {
         requestBody.morningInsight = dailyLog?.morning_insight;
         requestBody.middayReflection = middayAdjustmentText || dailyLog?.midday_adjustment;
+      } else if (phase === "evening") {
+        requestBody.morningInsight = dailyLog?.morning_insight;
+        requestBody.win = dailyLog?.win;
+        requestBody.weakness = dailyLog?.weakness;
+        requestBody.tomorrowsPrep = dailyLog?.tomorrows_prep;
       }
 
       console.log(`🚀 Regeneration #${regenerationId} - Generating ${phase} insight with context:`, requestBody);
@@ -944,7 +951,7 @@ const Index = () => {
           toast.error(`Failed to save insight: ${saveError.message}`);
           return;
         }
-      } else {
+      } else if (phase === "midday") {
         console.log(`💾 Regeneration #${regenerationId} - Saving midday insight to database...`);
         
         try {
@@ -977,9 +984,42 @@ const Index = () => {
           toast.error(`Failed to save insight: ${saveError.message}`);
           return;
         }
+      } else if (phase === "evening") {
+        console.log(`💾 Regeneration #${regenerationId} - Saving evening insight to database...`);
+        
+        try {
+          // Use externalClient directly to save to the correct database
+          const { error: saveError } = await externalClient
+            .from("daily_logs")
+            .update({ evening_insight: data })
+            .eq("id", dailyLog?.id);
+          
+          if (saveError) throw saveError;
+          
+          console.log(`✅ Regeneration #${regenerationId} - Evening insight saved successfully`);
+          
+          // Force UI refresh
+          const { data: refreshedLog, error: refreshError } = await externalClient
+            .from("daily_logs")
+            .select("*")
+            .eq("id", dailyLog?.id)
+            .maybeSingle();
+          
+          if (refreshError) {
+            console.error(`⚠️ Regeneration #${regenerationId} - Error refreshing log:`, refreshError);
+          } else if (refreshedLog) {
+            setDailyLog(refreshedLog as any);
+            console.log(`🎉 Regeneration #${regenerationId} - UI refreshed with new evening insight`);
+          }
+          
+        } catch (saveError: any) {
+          console.error(`❌ Regeneration #${regenerationId} - Database save error:`, saveError);
+          toast.error(`Failed to save insight: ${saveError.message}`);
+          return;
+        }
       }
       
-      toast.success(`${phase === "morning" ? "Daily" : "Midday"} insight generated!`);
+      toast.success(`${phase === "morning" ? "Daily" : phase === "midday" ? "Midday" : "Evening"} insight generated!`);
     } catch (error: any) {
       console.error("❌ Unexpected error:", error);
       toast.error(error.message || "Failed to generate insight");
@@ -1104,12 +1144,13 @@ const Index = () => {
       setEveningCompleted(false);
       // Clear evening data to show input fields again
       const updates: Partial<DailyLog> = {
+        evening_insight: null as any,
         win: "",
         weakness: "",
         tomorrows_prep: ""
       };
       await updateLog(updates);
-      setDailyLog(prev => prev ? { ...prev, win: "", weakness: "", tomorrows_prep: "" } : null);
+      setDailyLog(prev => prev ? { ...prev, evening_insight: null as any, win: "", weakness: "", tomorrows_prep: "" } : null);
     }
     toast.success(`${phase.charAt(0).toUpperCase() + phase.slice(1)} phase reopened`);
   };
@@ -1644,45 +1685,71 @@ const Index = () => {
               icon={<Moon className="h-6 w-6" />}
             >
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-black text-foreground mb-2 uppercase tracking-wider">
-                    Today's Win
-                  </label>
-                  <Textarea
-                    rows={3}
-                    placeholder="WHAT WENT WELL TODAY?"
-                    value={dailyLog.win || ""}
-                    onChange={(e) => handleWinChange(e.target.value)}
-                  />
-                </div>
+                {dailyLog.evening_insight ? (
+                  <>
+                    <InsightCard insight={dailyLog.evening_insight} />
+                    <Button onClick={() => markPhaseComplete("evening")} className="w-full" size="lg">
+                      Complete Day
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-black text-foreground mb-2 uppercase tracking-wider">
+                        Today's Win
+                      </label>
+                      <Textarea
+                        rows={3}
+                        placeholder="WHAT WENT WELL TODAY?"
+                        value={dailyLog.win || ""}
+                        onChange={(e) => handleWinChange(e.target.value)}
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-black text-foreground mb-2 uppercase tracking-wider">
-                    Growth Area
-                  </label>
-                  <Textarea
-                    rows={3}
-                    placeholder="WHERE CAN YOU IMPROVE?"
-                    value={dailyLog.weakness || ""}
-                    onChange={(e) => handleWeaknessChange(e.target.value)}
-                  />
-                </div>
+                    <div>
+                      <label className="block text-sm font-black text-foreground mb-2 uppercase tracking-wider">
+                        Growth Area
+                      </label>
+                      <Textarea
+                        rows={3}
+                        placeholder="WHERE CAN YOU IMPROVE?"
+                        value={dailyLog.weakness || ""}
+                        onChange={(e) => handleWeaknessChange(e.target.value)}
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-black text-foreground mb-2 uppercase tracking-wider">
-                    Tomorrow's Prep
-                  </label>
-                  <Textarea
-                    rows={3}
-                    placeholder="WHAT WILL MAKE TOMORROW BETTER?"
-                    value={dailyLog.tomorrows_prep || ""}
-                    onChange={(e) => handleTomorrowsPrepChange(e.target.value)}
-                  />
-                </div>
+                    <div>
+                      <label className="block text-sm font-black text-foreground mb-2 uppercase tracking-wider">
+                        Tomorrow's Prep
+                      </label>
+                      <Textarea
+                        rows={3}
+                        placeholder="WHAT WILL MAKE TOMORROW BETTER?"
+                        value={dailyLog.tomorrows_prep || ""}
+                        onChange={(e) => handleTomorrowsPrepChange(e.target.value)}
+                      />
+                    </div>
 
-                <Button onClick={() => markPhaseComplete("evening")} className="w-full" size="lg">
-                  Complete Day
-                </Button>
+                    <Button 
+                      onClick={() => generateDailyInsight("evening")} 
+                      disabled={isGenerating || !dailyLog.win || !dailyLog.weakness || !dailyLog.tomorrows_prep}
+                      size="lg"
+                      className="w-full"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader className="h-5 w-5 mr-2 animate-spin" />
+                          Generating Evening Insight...
+                        </>
+                      ) : (
+                        <>
+                          <BrainCircuit className="h-5 w-5 mr-2" />
+                          Generate Evening Insight
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
               </div>
             </ActivePhaseCard>
           )
@@ -1693,6 +1760,7 @@ const Index = () => {
             icon={<Moon className="h-4 w-4" />}
             onReopen={() => reopenPhase("evening")}
             onReset={resetEvening}
+            onRegenerate={() => generateDailyInsight("evening")}
           >
             <div className="space-y-4">
               {dailyLog.win && (
@@ -1711,6 +1779,20 @@ const Index = () => {
                 <div className="bg-background/50 rounded-lg p-4">
                   <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Tomorrow's Prep</h4>
                   <p className="text-sm whitespace-pre-wrap">{dailyLog.tomorrows_prep}</p>
+                </div>
+              )}
+              {dailyLog.evening_insight && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Evening Insight</h4>
+                  {dailyLog.evening_insight.analysis && (
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.evening_insight.analysis}</p>
+                  )}
+                  {dailyLog.evening_insight.tomorrowsFocus && (
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <div className="text-xs font-bold uppercase tracking-wide mb-1">Tomorrow's Focus</div>
+                      <p className="text-sm">{dailyLog.evening_insight.tomorrowsFocus}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

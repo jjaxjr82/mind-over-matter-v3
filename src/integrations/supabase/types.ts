@@ -51,6 +51,7 @@ export type Database = {
           date: string
           energy_level: string | null
           evening_complete: boolean
+          evening_insight: Json | null
           id: string
           midday_adjustment: string | null
           midday_complete: boolean
@@ -73,6 +74,7 @@ export type Database = {
           date: string
           energy_level?: string | null
           evening_complete?: boolean
+          evening_insight?: Json | null
           id?: string
           midday_adjustment?: string | null
           midday_complete?: boolean
@@ -95,6 +97,7 @@ export type Database = {
           date?: string
           energy_level?: string | null
           evening_complete?: boolean
+          evening_insight?: Json | null
           id?: string
           midday_adjustment?: string | null
           midday_complete?: boolean
