@@ -38,7 +38,7 @@ import WisdomLibraryModal from "@/components/WisdomLibraryModal";
 import FollowUpChat from "@/components/FollowUpChat";
 import DailyScheduleCard from "@/components/DailyScheduleCard";
 import { WeeklyTracker } from "@/components/WeeklyTracker";
-import { MorningQuickReference } from "@/components/MorningQuickReference";
+import { PhaseQuickReference } from "@/components/PhaseQuickReference";
 import { DayTimeline } from "@/components/DayTimeline";
 import { CompactPhaseCard } from "@/components/CompactPhaseCard";
 import { ActivePhaseCard } from "@/components/ActivePhaseCard";
@@ -568,6 +568,82 @@ const Index = () => {
     }
   };
 
+  const resetMidday = async () => {
+    if (!dailyLog?.id) return;
+    
+    try {
+      const { error } = await externalClient
+        .from("daily_logs")
+        .update({
+          midday_complete: false,
+          midday_insight: null,
+          midday_follow_up: [],
+          midday_adjustment: ""
+        })
+        .eq("id", dailyLog.id);
+      
+      if (error) throw error;
+      
+      // Refresh the UI
+      const { data: refreshed, error: refreshError } = await externalClient
+        .from("daily_logs")
+        .select("*")
+        .eq("id", dailyLog.id)
+        .maybeSingle();
+      
+      if (refreshError) throw refreshError;
+      
+      if (refreshed) {
+        setDailyLog(refreshed as any);
+        setMiddayCompleted(false);
+        setMiddayAdjustmentText("");
+        setCompletedActionItems({ ...completedActionItems, midday: [] });
+      }
+      
+      toast.success("Midday reset - you can now generate a fresh insight");
+    } catch (error: any) {
+      console.error("Error resetting midday:", error);
+      toast.error(`Failed to reset: ${error.message}`);
+    }
+  };
+
+  const resetEvening = async () => {
+    if (!dailyLog?.id) return;
+    
+    try {
+      const { error } = await externalClient
+        .from("daily_logs")
+        .update({
+          evening_complete: false,
+          win: "",
+          weakness: "",
+          tomorrows_prep: ""
+        })
+        .eq("id", dailyLog.id);
+      
+      if (error) throw error;
+      
+      // Refresh the UI
+      const { data: refreshed, error: refreshError } = await externalClient
+        .from("daily_logs")
+        .select("*")
+        .eq("id", dailyLog.id)
+        .maybeSingle();
+      
+      if (refreshError) throw refreshError;
+      
+      if (refreshed) {
+        setDailyLog(refreshed as any);
+        setEveningCompleted(false);
+      }
+      
+      toast.success("Evening reset - you can now reflect again");
+    } catch (error: any) {
+      console.error("Error resetting evening:", error);
+      toast.error(`Failed to reset: ${error.message}`);
+    }
+  };
+
   const handleSituationChange = useCallback(
     (value: string) => {
       setSituationText(value);
@@ -942,6 +1018,14 @@ const Index = () => {
       setDailyLog(prev => prev ? { ...prev, midday_insight: null as any, midday_follow_up: [] } : null);
     } else if (phase === "evening") {
       setEveningCompleted(false);
+      // Clear evening data to show input fields again
+      const updates: Partial<DailyLog> = {
+        win: "",
+        weakness: "",
+        tomorrows_prep: ""
+      };
+      await updateLog(updates);
+      setDailyLog(prev => prev ? { ...prev, win: "", weakness: "", tomorrows_prep: "" } : null);
     }
     toast.success(`${phase.charAt(0).toUpperCase() + phase.slice(1)} phase reopened`);
   };
@@ -1436,6 +1520,7 @@ const Index = () => {
             icon={<Sun className="h-4 w-4" />}
             onReopen={() => reopenPhase("midday")}
             onRegenerate={() => generateDailyInsight("midday")}
+            onReset={resetMidday}
           >
             <div className="space-y-4">
               {dailyLog.midday_adjustment && (
@@ -1523,6 +1608,7 @@ const Index = () => {
             title="Evening Reflection Complete"
             icon={<Moon className="h-4 w-4" />}
             onReopen={() => reopenPhase("evening")}
+            onReset={resetEvening}
           >
             <div className="space-y-4">
               {dailyLog.win && (
@@ -1681,14 +1767,38 @@ const Index = () => {
             />
           </div>
 
-          {/* Mobile Action Plan - Show above timeline on mobile */}
-          {dailyLog?.morning_insight && morningCompleted && !(morningCompleted && middayCompleted && eveningCompleted) && (
+          {/* Mobile Quick Reference - Show above timeline on mobile */}
+          {!(morningCompleted && middayCompleted && eveningCompleted) && (
             <div className="lg:hidden mb-6">
-              <MorningQuickReference
-                insight={dailyLog.morning_insight}
-                checkedItems={completedActionItems.morning}
-                onCheckItem={(index) => handleCheckActionItem("morning", index)}
-              />
+              {eveningCompleted && dailyLog && (
+                <PhaseQuickReference
+                  phase="evening"
+                  insight={null}
+                  checkedItems={[]}
+                  onCheckItem={() => {}}
+                  eveningData={{
+                    win: dailyLog.win,
+                    tomorrowPrep: dailyLog.tomorrows_prep,
+                    weakness: dailyLog.weakness
+                  }}
+                />
+              )}
+              {!eveningCompleted && middayCompleted && dailyLog?.midday_insight && (
+                <PhaseQuickReference
+                  phase="midday"
+                  insight={dailyLog.midday_insight}
+                  checkedItems={completedActionItems.midday}
+                  onCheckItem={(index) => handleCheckActionItem("midday", index)}
+                />
+              )}
+              {!eveningCompleted && !middayCompleted && morningCompleted && dailyLog?.morning_insight && (
+                <PhaseQuickReference
+                  phase="morning"
+                  insight={dailyLog.morning_insight}
+                  checkedItems={completedActionItems.morning}
+                  onCheckItem={(index) => handleCheckActionItem("morning", index)}
+                />
+              )}
             </div>
           )}
 
@@ -1699,14 +1809,38 @@ const Index = () => {
               <div className="space-y-4">{renderPhase()}</div>
             </div>
 
-            {/* Action Plan - Right Column (Sticky Sidebar) */}
-            {dailyLog?.morning_insight && morningCompleted && !(morningCompleted && middayCompleted && eveningCompleted) && (
+            {/* Quick Reference - Right Column (Sticky Sidebar) */}
+            {!(morningCompleted && middayCompleted && eveningCompleted) && (
               <div className="w-[340px] sticky top-4 hidden lg:block">
-                <MorningQuickReference
-                  insight={dailyLog.morning_insight}
-                  checkedItems={completedActionItems.morning}
-                  onCheckItem={(index) => handleCheckActionItem("morning", index)}
-                />
+                {eveningCompleted && dailyLog && (
+                  <PhaseQuickReference
+                    phase="evening"
+                    insight={null}
+                    checkedItems={[]}
+                    onCheckItem={() => {}}
+                    eveningData={{
+                      win: dailyLog.win,
+                      tomorrowPrep: dailyLog.tomorrows_prep,
+                      weakness: dailyLog.weakness
+                    }}
+                  />
+                )}
+                {!eveningCompleted && middayCompleted && dailyLog?.midday_insight && (
+                  <PhaseQuickReference
+                    phase="midday"
+                    insight={dailyLog.midday_insight}
+                    checkedItems={completedActionItems.midday}
+                    onCheckItem={(index) => handleCheckActionItem("midday", index)}
+                  />
+                )}
+                {!eveningCompleted && !middayCompleted && morningCompleted && dailyLog?.morning_insight && (
+                  <PhaseQuickReference
+                    phase="morning"
+                    insight={dailyLog.morning_insight}
+                    checkedItems={completedActionItems.morning}
+                    onCheckItem={(index) => handleCheckActionItem("morning", index)}
+                  />
+                )}
               </div>
             )}
           </div>
