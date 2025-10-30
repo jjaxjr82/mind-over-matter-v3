@@ -39,7 +39,7 @@ export const PhaseQuickReference = ({
           <CollapsibleTrigger className="w-full">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-black uppercase tracking-wider flex items-center justify-between">
-                <span>Quick Reference</span>
+                <span>Morning Insights</span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </CardTitle>
             </CardHeader>
@@ -248,7 +248,7 @@ export const PhaseQuickReference = ({
           <CollapsibleTrigger className="w-full">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-black uppercase tracking-wider flex items-center justify-between">
-                <span>Day Complete</span>
+                <span>Evening Insights</span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </CardTitle>
             </CardHeader>
