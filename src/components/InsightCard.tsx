@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckSquare, Square } from 'lucide-react';
+import { CheckSquare, Square, FileText, Headphones } from 'lucide-react';
 
 interface InsightData {
   title?: string;
@@ -10,6 +10,12 @@ interface InsightData {
   mainInsight?: string;
   actionItems?: Array<{ text: string }>;
   deeperInsight?: string;
+  recommendations?: Array<{
+    type: 'article' | 'podcast';
+    title: string;
+    description: string;
+    estimatedTime: string;
+  }>;
 }
 
 interface InsightCardProps {
@@ -84,6 +90,41 @@ const InsightCard = ({ insight }: InsightCardProps) => {
             Deeper Dive
           </h3>
           <p className="text-foreground font-bold leading-relaxed text-sm">{insight.deeperInsight}</p>
+        </div>
+      )}
+
+      {insight.recommendations && insight.recommendations.length > 0 && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-3 uppercase tracking-wider">
+            Recommended Resources
+          </h3>
+          <div className="space-y-3">
+            {insight.recommendations.map((rec, index) => (
+              <div
+                key={index}
+                className="p-3 bg-background border-2 border-foreground hover:bg-primary hover:text-background transition-all"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {rec.type === 'article' ? (
+                      <FileText className="h-5 w-5" />
+                    ) : (
+                      <Headphones className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-black text-sm uppercase tracking-wide">{rec.title}</h4>
+                      <span className="text-xs font-bold uppercase tracking-wider opacity-70 whitespace-nowrap">
+                        {rec.estimatedTime}
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold leading-relaxed">{rec.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

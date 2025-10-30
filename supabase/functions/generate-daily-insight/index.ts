@@ -40,7 +40,15 @@ Generate a structured daily insight in JSON format with these exact fields:
     {"text": "Specific actionable item 2"},
     {"text": "Specific actionable item 3"}
   ],
-  "deeperInsight": "A deeper philosophical reflection (2-3 sentences)"
+  "deeperInsight": "A deeper philosophical reflection (2-3 sentences)",
+  "recommendations": [
+    {
+      "type": "article or podcast",
+      "title": "Specific title of real article/podcast",
+      "description": "1-2 sentences explaining why this is relevant to their specific challenges and context",
+      "estimatedTime": "5 min read or 30 min listen"
+    }
+  ]
 }
 
 User Context:
@@ -51,6 +59,16 @@ User Context:
 - Energy Level: ${energyLevel}
 - Focus Areas: ${focusAreas}
 - Current Situation: ${situation}
+
+Recommendations Guidelines:
+- Provide 2-3 high-quality recommendations (mix of articles and podcasts)
+- Base recommendations on their active challenges and wisdom sources (suggest similar quality content)
+- Consider their work mode, energy level, and focus areas
+- Suggest real, actionable content from trusted sources (similar to their wisdom library)
+- Match content to their current situation (e.g., WFH-friendly for home workers)
+- Vary between quick reads (5-10 min) and longer podcasts (30-60 min)
+- Make each recommendation directly relevant to a specific challenge or focus area
+- Prioritize practical, actionable content over theoretical
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
     } else {
@@ -77,7 +95,15 @@ Generate a JSON response with these exact fields:
     {"text": "Adjusted action 2 for afternoon"},
     {"text": "Adjusted action 3 for afternoon"}
   ],
-  "deeperInsight": "A supportive reflection on their progress (1-2 sentences)"
+  "deeperInsight": "A supportive reflection on their progress (1-2 sentences)",
+  "recommendations": [
+    {
+      "type": "article or podcast",
+      "title": "Specific title",
+      "description": "Why this helps with their afternoon focus",
+      "estimatedTime": "time estimate"
+    }
+  ]
 }
 
 Guidelines:
@@ -86,6 +112,7 @@ Guidelines:
 - Help them refocus and prioritize for the remaining day
 - Reference morning action items if relevant
 - Keep tone supportive and energizing
+- Provide 1-2 recommendations for afternoon listening/reading to support momentum and focus
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
     }
