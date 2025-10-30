@@ -35,6 +35,7 @@ import WisdomLibraryModal from "@/components/WisdomLibraryModal";
 import FollowUpChat from "@/components/FollowUpChat";
 import DailyScheduleCard from "@/components/DailyScheduleCard";
 import { WeeklyTracker } from "@/components/WeeklyTracker";
+import { QuickReferenceDrawer } from "@/components/QuickReferenceDrawer";
 import { WORK_MODES, ENERGY_LEVELS } from "@/hooks/useScheduleManager";
 
 interface Challenge {
@@ -168,6 +169,9 @@ const Index = () => {
   const [morningCompleted, setMorningCompleted] = useState(false);
   const [middayCompleted, setMiddayCompleted] = useState(false);
   const [eveningCompleted, setEveningCompleted] = useState(false);
+  
+  // Quick Reference Drawer state
+  const [isQuickRefOpen, setIsQuickRefOpen] = useState(false);
 
   // Check authentication
   useEffect(() => {
@@ -1531,6 +1535,24 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Quick Reference Drawer */}
+        <QuickReferenceDrawer
+          morningInsight={dailyLog?.morning_insight}
+          middayInsight={dailyLog?.midday_insight}
+          isOpen={isQuickRefOpen}
+          onToggle={() => setIsQuickRefOpen(!isQuickRefOpen)}
+          onViewFullInsight={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Find and expand the collapsed morning insight details
+            setTimeout(() => {
+              const detailsElement = document.querySelector('details');
+              if (detailsElement && !detailsElement.open) {
+                detailsElement.open = true;
+              }
+            }, 500);
+          }}
+        />
       </div>
     </>
   );
