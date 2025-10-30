@@ -6,6 +6,7 @@ import { dualInsert, dualUpdate, dualDeleteWhere } from '@/integrations/supabase
 import { 
   transformScheduleForExternalDB, 
   transformScheduleForCloudDB,
+  parseScheduleFromExternalDB,
   WorkMode
 } from '@/utils/databaseSchemaAdapters';
 import { toast } from 'sonner';
@@ -79,28 +80,36 @@ export const useScheduleManager = () => {
       console.log('✅ Focus areas loaded:', loadedFocusAreas);
       setFocusAreas(loadedFocusAreas);
 
-      // Load daily schedules from external DB
+      // Load daily schedules from external DB (PRIMARY SOURCE)
+      console.log('📥 Loading schedules from external DB...');
+      
       const { data, error } = await externalClient
         .from('schedules')
         .select('*')
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Failed to load schedules:', error);
+        throw error;
+      }
+
+      console.log('✅ Loaded', data?.length || 0, 'schedules from external DB');
 
       const scheduleMap: Record<string, DaySchedule> = {};
       
-      // Parse schedules - work_mode stored in tags array
+      // Parse schedules using schema adapter
       data?.forEach((schedule: any) => {
-        const tags = schedule.tags || [];
-        const workMode = tags.find((t: string) => WORK_MODES.includes(t as any)) || 'WFH';
-        const focusAreas = tags.filter((t: string) => !WORK_MODES.includes(t as any));
+        const parsed = parseScheduleFromExternalDB(schedule);
         
         scheduleMap[schedule.day_of_week] = {
           id: schedule.id,
-          day_of_week: schedule.day_of_week,
-          work_mode: workMode,
-          focus_areas: focusAreas,
+          ...parsed,
         };
+        
+        console.log(`📋 Parsed ${schedule.day_of_week}:`, {
+          work_mode: parsed.work_mode,
+          focus_areas: parsed.focus_areas.length
+        });
       });
 
       // Initialize empty schedules for days without data
