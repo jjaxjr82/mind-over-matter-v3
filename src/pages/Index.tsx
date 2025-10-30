@@ -1038,7 +1038,7 @@ const Index = () => {
             className="min-h-[150px]"
           />
 
-          {!dailyLog.midday_insight && dailyLog.midday_adjustment && (
+          {!dailyLog.midday_insight && dailyLog.midday_adjustment?.trim() && (
             <Button 
               onClick={() => generateDailyInsight("midday")}
               disabled={isGenerating}
