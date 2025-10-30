@@ -14,7 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      challenges: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_logs: {
+        Row: {
+          created_at: string
+          date: string
+          energy_level: string | null
+          evening_complete: boolean
+          id: string
+          midday_adjustment: string | null
+          midday_complete: boolean
+          midday_follow_up: Json[] | null
+          morning_complete: boolean
+          morning_follow_up: Json[] | null
+          morning_insight: Json | null
+          situation: string | null
+          tomorrows_prep: string | null
+          updated_at: string
+          user_id: string
+          weakness: string | null
+          win: string | null
+          work_mode: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          energy_level?: string | null
+          evening_complete?: boolean
+          id?: string
+          midday_adjustment?: string | null
+          midday_complete?: boolean
+          midday_follow_up?: Json[] | null
+          morning_complete?: boolean
+          morning_follow_up?: Json[] | null
+          morning_insight?: Json | null
+          situation?: string | null
+          tomorrows_prep?: string | null
+          updated_at?: string
+          user_id: string
+          weakness?: string | null
+          win?: string | null
+          work_mode?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          energy_level?: string | null
+          evening_complete?: boolean
+          id?: string
+          midday_adjustment?: string | null
+          midday_complete?: boolean
+          midday_follow_up?: Json[] | null
+          morning_complete?: boolean
+          morning_follow_up?: Json[] | null
+          morning_insight?: Json | null
+          situation?: string | null
+          tomorrows_prep?: string | null
+          updated_at?: string
+          user_id?: string
+          weakness?: string | null
+          win?: string | null
+          work_mode?: string | null
+        }
+        Relationships: []
+      }
+      schedules: {
+        Row: {
+          created_at: string
+          day_of_week: string
+          description: string
+          id: string
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: string
+          description: string
+          id?: string
+          tags?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string
+          description?: string
+          id?: string
+          tags?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wisdom_library: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+          tag: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          name: string
+          tag: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          tag?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
