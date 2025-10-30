@@ -72,6 +72,7 @@ export const useScheduleManager = () => {
         console.log('📝 Creating master record with defaults');
         const { error: insertError } = await dualInsert('schedules', {
           day_of_week: '_focus_areas_',
+          work_mode: '_master_',
           tags: DEFAULT_FOCUS_AREAS,
           description: 'Master focus areas list',
           user_id: user.id,
@@ -182,6 +183,7 @@ export const useScheduleManager = () => {
         console.log('Creating new master record');
         const { error: insertError } = await dualInsert('schedules', {
           day_of_week: '_focus_areas_',
+          work_mode: '_master_',
           tags: updatedAreas,
           description: 'Master focus areas list',
           user_id: user.id,
