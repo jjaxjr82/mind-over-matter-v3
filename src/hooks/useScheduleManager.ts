@@ -64,7 +64,7 @@ export const useScheduleManager = () => {
       
       try {
         const { data: settingsData, error: settingsError } = await externalClient
-          .from('user_settings')
+          .from('user_preferences')
           .select('setting_value')
           .eq('user_id', user.id)
           .eq('setting_key', 'focus_areas')
@@ -75,7 +75,7 @@ export const useScheduleManager = () => {
           loadedFocusAreas = settingsValue?.areas || [...DEFAULT_FOCUS_AREAS];
         }
       } catch (error) {
-        console.log('Could not load user settings, using defaults');
+        console.log('Could not load user preferences, using defaults');
       }
       
       console.log('✅ Focus areas loaded:', loadedFocusAreas);
@@ -177,9 +177,9 @@ export const useScheduleManager = () => {
     try {
       console.log('Adding focus area:', trimmed);
       
-      // Check if setting exists
+      // Check if preference exists
       const { data: existing } = await externalClient
-        .from('user_settings')
+        .from('user_preferences')
         .select('id')
         .eq('user_id', user.id)
         .eq('setting_key', 'focus_areas')
@@ -187,14 +187,14 @@ export const useScheduleManager = () => {
       
       if (existing) {
         // Update existing
-        const { error: updateError } = await dualUpdate('user_settings',
+        const { error: updateError } = await dualUpdate('user_preferences',
           { setting_value: { areas: updatedAreas } },
           { column: 'id', value: existing.id }
         );
         if (updateError) throw updateError;
       } else {
         // Insert new
-        const { error: insertError } = await dualInsert('user_settings', {
+        const { error: insertError } = await dualInsert('user_preferences', {
           user_id: user.id,
           setting_key: 'focus_areas',
           setting_value: { areas: updatedAreas },
@@ -229,19 +229,19 @@ export const useScheduleManager = () => {
       return updated;
     });
     
-    // Update user_settings table
+    // Update user_preferences table
     try {
       console.log('Removing focus area:', area);
       
       const { data: existing } = await externalClient
-        .from('user_settings')
+        .from('user_preferences')
         .select('id')
         .eq('user_id', user.id)
         .eq('setting_key', 'focus_areas')
         .maybeSingle();
       
       if (existing) {
-        const { error: updateError } = await dualUpdate('user_settings',
+        const { error: updateError } = await dualUpdate('user_preferences',
           { setting_value: { areas: updatedAreas } },
           { column: 'id', value: existing.id }
         );
