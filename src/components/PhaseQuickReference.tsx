@@ -1,7 +1,9 @@
-import { Target, Heart, CheckSquare, BookOpen, TrendingUp, Trophy, ArrowRight } from "lucide-react";
+import { Target, Heart, CheckSquare, BookOpen, TrendingUp, Trophy, ArrowRight, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
 
 interface PhaseQuickReferenceProps {
   phase: "morning" | "midday" | "evening";
@@ -22,6 +24,8 @@ export const PhaseQuickReference = ({
   onCheckItem,
   eveningData 
 }: PhaseQuickReferenceProps) => {
+  const [isOpen, setIsOpen] = useState(true);
+  
   if (!insight && !eveningData) return null;
 
   // Morning Phase Quick Reference
@@ -30,11 +34,18 @@ export const PhaseQuickReference = ({
     const recommendations = insight.recommendations || [];
 
     return (
-      <Card className="border-2 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-black uppercase tracking-wider">Quick Reference</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <Card className="border-2 shadow-sm">
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-black uppercase tracking-wider flex items-center justify-between">
+                <span>Quick Reference</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
           {/* Power Question */}
           {insight.powerQuestion && (
             <div className="border-l-4 border-primary pl-4 py-2">
@@ -127,8 +138,10 @@ export const PhaseQuickReference = ({
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     );
   }
 
@@ -138,11 +151,18 @@ export const PhaseQuickReference = ({
     const keyAdjustments = insight?.keyAdjustments || [];
 
     return (
-      <Card className="border-2 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-black uppercase tracking-wider">Midday Insights</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <Card className="border-2 shadow-sm">
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-black uppercase tracking-wider flex items-center justify-between">
+                <span>Midday Insights</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
           {/* Analysis Summary */}
           {insight?.analysis && (
             <div className="border-l-4 border-primary pl-4 py-2">
@@ -213,19 +233,28 @@ export const PhaseQuickReference = ({
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     );
   }
 
   // Evening Phase Quick Reference
   if (phase === "evening" && eveningData) {
     return (
-      <Card className="border-2 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-black uppercase tracking-wider">Day Complete</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <Card className="border-2 shadow-sm">
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-black uppercase tracking-wider flex items-center justify-between">
+                <span>Day Complete</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
           {/* Today's Win */}
           {eveningData.win && (
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-lg p-4">
@@ -264,8 +293,10 @@ export const PhaseQuickReference = ({
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     );
   }
 

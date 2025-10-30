@@ -1768,8 +1768,47 @@ const Index = () => {
           </div>
 
           {/* Mobile Quick Reference - Show above timeline on mobile */}
-          {!(morningCompleted && middayCompleted && eveningCompleted) && (
-            <div className="lg:hidden mb-6">
+          <div className="lg:hidden mb-6">
+            {eveningCompleted && dailyLog && (
+              <PhaseQuickReference
+                phase="evening"
+                insight={null}
+                checkedItems={[]}
+                onCheckItem={() => {}}
+                eveningData={{
+                  win: dailyLog.win,
+                  tomorrowPrep: dailyLog.tomorrows_prep,
+                  weakness: dailyLog.weakness
+                }}
+              />
+            )}
+            {!eveningCompleted && middayCompleted && dailyLog?.midday_insight && (
+              <PhaseQuickReference
+                phase="midday"
+                insight={dailyLog.midday_insight}
+                checkedItems={completedActionItems.midday}
+                onCheckItem={(index) => handleCheckActionItem("midday", index)}
+              />
+            )}
+            {!eveningCompleted && !middayCompleted && morningCompleted && dailyLog?.morning_insight && (
+              <PhaseQuickReference
+                phase="morning"
+                insight={dailyLog.morning_insight}
+                checkedItems={completedActionItems.morning}
+                onCheckItem={(index) => handleCheckActionItem("morning", index)}
+              />
+            )}
+          </div>
+
+          {/* Two Column Layout: Timeline + Action Plan */}
+          <div className="flex gap-6 items-start">
+            {/* Main Timeline - Left Column */}
+            <div className="flex-1 w-full max-w-3xl bg-card border border-border rounded-lg p-6">
+              <div className="space-y-4">{renderPhase()}</div>
+            </div>
+
+            {/* Quick Reference - Right Column (Sticky Sidebar) */}
+            <div className="w-[340px] sticky top-4 hidden lg:block">
               {eveningCompleted && dailyLog && (
                 <PhaseQuickReference
                   phase="evening"
@@ -1800,49 +1839,6 @@ const Index = () => {
                 />
               )}
             </div>
-          )}
-
-          {/* Two Column Layout: Timeline + Action Plan */}
-          <div className="flex gap-6 items-start">
-            {/* Main Timeline - Left Column */}
-            <div className="flex-1 w-full max-w-3xl bg-card border border-border rounded-lg p-6">
-              <div className="space-y-4">{renderPhase()}</div>
-            </div>
-
-            {/* Quick Reference - Right Column (Sticky Sidebar) */}
-            {!(morningCompleted && middayCompleted && eveningCompleted) && (
-              <div className="w-[340px] sticky top-4 hidden lg:block">
-                {eveningCompleted && dailyLog && (
-                  <PhaseQuickReference
-                    phase="evening"
-                    insight={null}
-                    checkedItems={[]}
-                    onCheckItem={() => {}}
-                    eveningData={{
-                      win: dailyLog.win,
-                      tomorrowPrep: dailyLog.tomorrows_prep,
-                      weakness: dailyLog.weakness
-                    }}
-                  />
-                )}
-                {!eveningCompleted && middayCompleted && dailyLog?.midday_insight && (
-                  <PhaseQuickReference
-                    phase="midday"
-                    insight={dailyLog.midday_insight}
-                    checkedItems={completedActionItems.midday}
-                    onCheckItem={(index) => handleCheckActionItem("midday", index)}
-                  />
-                )}
-                {!eveningCompleted && !middayCompleted && morningCompleted && dailyLog?.morning_insight && (
-                  <PhaseQuickReference
-                    phase="morning"
-                    insight={dailyLog.morning_insight}
-                    checkedItems={completedActionItems.morning}
-                    onCheckItem={(index) => handleCheckActionItem("morning", index)}
-                  />
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
