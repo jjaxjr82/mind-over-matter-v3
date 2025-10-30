@@ -618,6 +618,36 @@ const Index = () => {
     setIsGenerating(true);
     try {
       const today = new Date().toLocaleString("en-us", { weekday: "long" });
+      
+      // 🔄 FETCH FRESH SCHEDULE DATA from database
+      console.log('🔄 Fetching fresh schedule data from database...');
+      const { data: scheduleData, error: scheduleError } = await externalClient
+        .from("schedules")
+        .select("*")
+        .eq("user_id", user?.id);
+      
+      if (scheduleError) {
+        console.error("❌ Error fetching schedule:", scheduleError);
+        toast.error("Failed to load schedule data");
+        return;
+      }
+      
+      // Parse today's schedule from fresh data
+      const todaySchedule = scheduleData?.find(d => d.day_of_week === today);
+      const tags = todaySchedule?.tags || [];
+      const freshWorkMode = tags.find((t: string) => WORK_MODES.includes(t as any)) || "WFH";
+      const freshEnergyLevel = tags.find((t: string) => ENERGY_LEVELS.includes(t as any)) || null;
+      const freshFocusAreas = tags.filter(
+        (t: string) => !WORK_MODES.includes(t as any) && !ENERGY_LEVELS.includes(t as any)
+      );
+      
+      console.log('✅ Fresh schedule loaded:', { 
+        workMode: freshWorkMode, 
+        energyLevel: freshEnergyLevel,
+        focusAreas: freshFocusAreas,
+        description: todaySchedule?.description 
+      });
+      
       const activeChallenges = challenges
         .filter((c) => c.is_active)
         .map((c) => c.name)
@@ -632,10 +662,10 @@ const Index = () => {
         phase,
         challenges: activeChallenges || "None",
         wisdomSources: activeWisdomSources || "General wisdom",
-        schedule: schedule[today] || "No schedule set",
-        workMode: todayWorkMode,
-        energyLevel: todayEnergyLevel,
-        focusAreas: todayFocusAreas.join(", ") || "None",
+        schedule: todaySchedule?.description || "No schedule set",
+        workMode: freshWorkMode,
+        energyLevel: freshEnergyLevel,
+        focusAreas: freshFocusAreas.join(", ") || "None",
         situation: dailyLog?.situation || "None",
       };
 
