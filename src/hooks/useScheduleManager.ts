@@ -73,7 +73,7 @@ export const useScheduleManager = () => {
       console.log('✅ Focus areas loaded:', loadedFocusAreas);
       setFocusAreas(loadedFocusAreas);
 
-      // Load daily schedules from external DB (has work_mode column)
+      // Load daily schedules from external DB
       const { data, error } = await externalClient
         .from('schedules')
         .select('*')
@@ -83,13 +83,17 @@ export const useScheduleManager = () => {
 
       const scheduleMap: Record<string, DaySchedule> = {};
       
-      // Parse schedules from external DB
+      // Parse schedules - work_mode stored in tags array
       data?.forEach((schedule: any) => {
+        const tags = schedule.tags || [];
+        const workMode = tags.find((t: string) => WORK_MODES.includes(t as any)) || 'WFH';
+        const focusAreas = tags.filter((t: string) => !WORK_MODES.includes(t as any));
+        
         scheduleMap[schedule.day_of_week] = {
           id: schedule.id,
           day_of_week: schedule.day_of_week,
-          work_mode: schedule.work_mode || 'WFH',
-          focus_areas: schedule.tags || [],
+          work_mode: workMode,
+          focus_areas: focusAreas,
         };
       });
 
@@ -232,9 +236,7 @@ export const useScheduleManager = () => {
     
     setIsSaving(true);
     try {
-      // Handle both databases separately due to schema differences
-      
-      // 1. Delete from external DB (has work_mode column)
+      // Delete from external DB
       const { error: extDeleteError } = await externalClient
         .from('schedules')
         .delete()
@@ -242,11 +244,10 @@ export const useScheduleManager = () => {
       
       if (extDeleteError) throw extDeleteError;
       
-      // 2. Insert into external DB with work_mode column
+      // Insert into external DB - store work_mode in tags to avoid constraint issues
       const externalData = Object.values(schedules).map((schedule) => ({
         day_of_week: schedule.day_of_week,
-        work_mode: schedule.work_mode,
-        tags: schedule.focus_areas, // Only focus areas in tags for external DB
+        tags: [schedule.work_mode, ...schedule.focus_areas], // Work mode + focus areas in tags
         description: '',
         user_id: user.id,
       }));
