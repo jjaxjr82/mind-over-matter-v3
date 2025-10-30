@@ -1390,6 +1390,12 @@ const Index = () => {
               </div>
             )}
             
+            <MorningQuickReference
+              insight={dailyLog.morning_insight}
+              checkedItems={completedActionItems.morning}
+              onCheckItem={(index) => handleCheckActionItem("morning", index)}
+            />
+            
             <div className="p-6 bg-secondary border border-border rounded-lg text-center space-y-4">
               <div>
                 <Lock className="mx-auto h-8 w-8 mb-3" />
@@ -1437,7 +1443,13 @@ const Index = () => {
                 </div>
               </details>
             </div>
-          )}
+            )}
+          
+          <MorningQuickReference
+            insight={dailyLog.morning_insight}
+            checkedItems={completedActionItems.morning}
+            onCheckItem={(index) => handleCheckActionItem("morning", index)}
+          />
           
           <div className="border-l-4 border-primary pl-4 mb-4">
             <div className="flex items-center gap-2">
