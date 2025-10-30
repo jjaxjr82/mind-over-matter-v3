@@ -433,6 +433,33 @@ const Index = () => {
     loadDailyLog();
   }, [selectedDate, user, authChecked, weekSchedule]);
 
+  // Refresh schedule data when page becomes visible (e.g., after navigating back from Schedule Manager)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user) {
+        console.log('🔄 Page visible again, reloading schedule data...');
+        loadFocusAreas().then((loadedSchedule) => {
+          // Update today's schedule settings with fresh data
+          const dateStr = selectedDate.toISOString().split("T")[0];
+          const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+          const daySchedule = loadedSchedule?.[dayName];
+          
+          if (daySchedule) {
+            setTodayWorkMode(daySchedule.work_mode);
+            setTodayFocusAreas(daySchedule.focus_areas);
+            console.log('✅ Updated today\'s schedule:', { workMode: daySchedule.work_mode, focusAreas: daySchedule.focus_areas });
+          }
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, loadFocusAreas, selectedDate]);
+
   const updateLog = useCallback(
     async (updates: Partial<DailyLog>) => {
       if (!dailyLog) return;
