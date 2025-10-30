@@ -1275,7 +1275,10 @@ const Index = () => {
                 <div className="space-y-4">
                   {dailyLog.morning_insight?.quote && (
                     <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
-                      <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                      <p className="text-sm italic">"{dailyLog.morning_insight.quote.text}"</p>
+                      {dailyLog.morning_insight.quote.author && (
+                        <p className="text-xs text-muted-foreground mt-2">— {dailyLog.morning_insight.quote.author}</p>
+                      )}
                     </div>
                   )}
                   {dailyLog.morning_insight?.analysis && (
@@ -1344,7 +1347,10 @@ const Index = () => {
               <div className="space-y-4">
                 {dailyLog.morning_insight?.quote && (
                   <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
-                    <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                    <p className="text-sm italic">"{dailyLog.morning_insight.quote.text}"</p>
+                    {dailyLog.morning_insight.quote.author && (
+                      <p className="text-xs text-muted-foreground mt-2">— {dailyLog.morning_insight.quote.author}</p>
+                    )}
                   </div>
                 )}
                 {dailyLog.morning_insight?.analysis && (
@@ -1498,7 +1504,10 @@ const Index = () => {
                 <div className="space-y-4">
                   {dailyLog.morning_insight?.quote && (
                     <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
-                      <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                      <p className="text-sm italic">"{dailyLog.morning_insight.quote.text}"</p>
+                      {dailyLog.morning_insight.quote.author && (
+                        <p className="text-xs text-muted-foreground mt-2">— {dailyLog.morning_insight.quote.author}</p>
+                      )}
                     </div>
                   )}
                   {dailyLog.morning_insight?.analysis && (
@@ -1613,7 +1622,10 @@ const Index = () => {
               <div className="space-y-4">
                 {dailyLog.morning_insight?.quote && (
                   <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
-                    <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                    <p className="text-sm italic">"{dailyLog.morning_insight.quote.text}"</p>
+                    {dailyLog.morning_insight.quote.author && (
+                      <p className="text-xs text-muted-foreground mt-2">— {dailyLog.morning_insight.quote.author}</p>
+                    )}
                   </div>
                 )}
                 {dailyLog.morning_insight?.analysis && (
@@ -1811,7 +1823,10 @@ const Index = () => {
             <div className="space-y-4">
               {dailyLog.morning_insight?.quote && (
                 <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
-                  <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                  <p className="text-sm italic">"{dailyLog.morning_insight.quote.text}"</p>
+                  {dailyLog.morning_insight.quote.author && (
+                    <p className="text-xs text-muted-foreground mt-2">— {dailyLog.morning_insight.quote.author}</p>
+                  )}
                 </div>
               )}
               {dailyLog.morning_insight?.analysis && (
