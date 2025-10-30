@@ -237,26 +237,30 @@ const ScheduleManager = () => {
                   {/* Focus Areas (Multi-select) */}
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider mb-2 text-muted-foreground">
-                      Focus Areas
+                      Focus Areas {schedule.focus_areas?.length > 0 && `(${schedule.focus_areas.length} selected)`}
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {focusAreas.map((area) => {
-                        const isSelected = schedule.focus_areas?.includes(area) || false;
-                        return (
-                          <Badge
-                            key={area}
-                            variant={isSelected ? "default" : "outline"}
-                            className={`cursor-pointer border-2 border-border transition-all ${
-                              isSelected 
-                                ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                                : 'hover:border-primary'
-                            }`}
-                            onClick={() => toggleFocusArea(day, area)}
-                          >
-                            {area}
-                          </Badge>
-                        );
-                      })}
+                      {focusAreas.length > 0 ? (
+                        focusAreas.map((area) => {
+                          const isSelected = schedule.focus_areas?.includes(area) || false;
+                          return (
+                            <Badge
+                              key={area}
+                              variant={isSelected ? "default" : "outline"}
+                              className={`cursor-pointer border-2 transition-all ${
+                                isSelected 
+                                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 border-primary font-bold' 
+                                  : 'bg-background hover:bg-muted border-muted-foreground/30'
+                              }`}
+                              onClick={() => toggleFocusArea(day, area)}
+                            >
+                              {area}
+                            </Badge>
+                          );
+                        })
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Add focus areas above to get started</p>
+                      )}
                     </div>
                   </div>
                 </div>
