@@ -7,6 +7,7 @@ import {
   transformScheduleForExternalDB, 
   transformScheduleForCloudDB,
   parseScheduleFromExternalDB,
+  parseScheduleFromCloudDB,
   WorkMode
 } from '@/utils/databaseSchemaAdapters';
 import { toast } from 'sonner';
@@ -97,9 +98,19 @@ export const useScheduleManager = () => {
 
       const scheduleMap: Record<string, DaySchedule> = {};
       
-      // Parse schedules using schema adapter
+      // Detect schema format by checking first row
+      let useNewSchema = false;
+      if (data && data.length > 0) {
+        const firstRow = data[0];
+        useNewSchema = 'work_mode' in firstRow && firstRow.work_mode !== undefined;
+        console.log('🔍 Schema detected:', useNewSchema ? 'NEW (work_mode column)' : 'OLD (work_mode in tags)');
+      }
+      
+      // Parse schedules using appropriate adapter based on detected schema
       data?.forEach((schedule: any) => {
-        const parsed = parseScheduleFromExternalDB(schedule);
+        const parsed = useNewSchema 
+          ? parseScheduleFromExternalDB(schedule)
+          : parseScheduleFromCloudDB(schedule);
         
         scheduleMap[schedule.day_of_week] = {
           id: schedule.id,
