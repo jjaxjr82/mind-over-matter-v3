@@ -641,7 +641,7 @@ const Index = () => {
 
       if (phase === "midday") {
         requestBody.morningInsight = dailyLog?.morning_insight;
-        requestBody.middayReflection = dailyLog?.midday_adjustment;
+        requestBody.middayReflection = middayAdjustmentText || dailyLog?.midday_adjustment;
       }
 
       console.log(`🚀 Generating ${phase} insight with context:`, requestBody);
@@ -1105,7 +1105,7 @@ const Index = () => {
             className="min-h-[150px]"
           />
 
-          {!dailyLog.midday_insight && dailyLog.midday_adjustment?.trim() && (
+          {!dailyLog.midday_insight && middayAdjustmentText.trim() && (
             <Button 
               onClick={() => generateDailyInsight("midday")}
               disabled={isGenerating}
