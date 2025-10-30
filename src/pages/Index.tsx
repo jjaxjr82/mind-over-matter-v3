@@ -511,7 +511,7 @@ const Index = () => {
 
         if (error) throw error;
 
-        setDailyLog({ ...dailyLog, ...updates });
+    setDailyLog(prev => prev ? { ...prev, ...updates } : null);
       } catch (error: any) {
         console.error("Error updating log:", error);
         toast.error("Failed to save changes");
