@@ -76,7 +76,7 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('analyze-wisdom-source', {
-        body: { input: aiInput }
+        body: { userInput: aiInput }
       });
 
       if (error) throw error;
