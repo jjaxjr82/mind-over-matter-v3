@@ -162,6 +162,7 @@ const Index = () => {
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [situationText, setSituationText] = useState("");
+  const [middayAdjustmentText, setMiddayAdjustmentText] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -406,6 +407,7 @@ const Index = () => {
           };
           setDailyLog(log);
           setSituationText(log.situation || "");
+          setMiddayAdjustmentText(log.midday_adjustment || "");
           
           // Load completed action items
           const completedItems = (logData.completed_action_items as any) || {};
@@ -528,6 +530,21 @@ const Index = () => {
 
       debounceTimerRef.current = setTimeout(() => {
         updateLog({ situation: value });
+      }, 500);
+    },
+    [updateLog],
+  );
+
+  const handleMiddayAdjustmentChange = useCallback(
+    (value: string) => {
+      setMiddayAdjustmentText(value);
+
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      debounceTimerRef.current = setTimeout(() => {
+        updateLog({ midday_adjustment: value });
       }, 500);
     },
     [updateLog],
@@ -1083,8 +1100,8 @@ const Index = () => {
 
           <Textarea
             placeholder="How's your day going? What's working? What needs adjustment? Share your thoughts..."
-            value={dailyLog.midday_adjustment || ''}
-            onChange={(e) => updateLog({ midday_adjustment: e.target.value })}
+            value={middayAdjustmentText}
+            onChange={(e) => handleMiddayAdjustmentChange(e.target.value)}
             className="min-h-[150px]"
           />
 
