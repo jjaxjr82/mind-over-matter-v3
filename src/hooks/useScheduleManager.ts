@@ -52,19 +52,25 @@ export const useScheduleManager = () => {
     setIsLoading(true);
     try {
       // Load focus areas from user_settings table
-      const { data: settingsData, error: settingsError } = await externalClient
-        .from('user_settings')
-        .select('setting_value')
-        .eq('user_id', user.id)
-        .eq('setting_key', 'focus_areas')
-        .maybeSingle();
+      // Try to load from external DB first, fall back to default if table doesn't exist
+      let loadedFocusAreas = [...DEFAULT_FOCUS_AREAS];
+      
+      try {
+        const { data: settingsData, error: settingsError } = await externalClient
+          .from('user_settings')
+          .select('setting_value')
+          .eq('user_id', user.id)
+          .eq('setting_key', 'focus_areas')
+          .maybeSingle();
 
-      if (settingsError && settingsError.code !== 'PGRST116') {
-        console.error('Error loading settings:', settingsError);
+        if (!settingsError && settingsData) {
+          const settingsValue = settingsData.setting_value as { areas?: string[] } | null;
+          loadedFocusAreas = settingsValue?.areas || [...DEFAULT_FOCUS_AREAS];
+        }
+      } catch (error) {
+        console.log('Could not load user settings, using defaults');
       }
-
-      const settingsValue = settingsData?.setting_value as { areas?: string[] } | null;
-      const loadedFocusAreas = settingsValue?.areas || [...DEFAULT_FOCUS_AREAS];
+      
       console.log('✅ Focus areas loaded:', loadedFocusAreas);
       setFocusAreas(loadedFocusAreas);
 
@@ -243,6 +249,7 @@ export const useScheduleManager = () => {
       // Insert all schedules with valid data only
       const insertData = Object.values(schedules).map((schedule) => ({
         day_of_week: schedule.day_of_week,
+        work_mode: schedule.work_mode,
         tags: [schedule.work_mode, ...schedule.focus_areas],
         description: '',
         user_id: user.id,
