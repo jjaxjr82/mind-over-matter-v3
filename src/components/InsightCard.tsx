@@ -7,8 +7,13 @@ interface InsightData {
     text: string;
     author: string;
   };
+  powerQuestion?: string;
+  metaphor?: string;
   mainInsight?: string;
   actionItems?: Array<{ text: string }>;
+  todaysPitfall?: string;
+  theAnchor?: string;
+  carryThis?: string;
   deeperInsight?: string;
   recommendations?: Array<{
     type: 'article' | 'podcast';
@@ -48,10 +53,25 @@ const InsightCard = ({ insight }: InsightCardProps) => {
         </blockquote>
       )}
 
-      {insight.mainInsight && (
-        <div>
-          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider">Core Thought</h3>
-          <p className="text-foreground font-bold leading-relaxed text-sm">{insight.mainInsight}</p>
+      {insight.powerQuestion && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider">
+            🎯 Your Power Question
+          </h3>
+          <p className="text-foreground font-bold leading-relaxed text-sm italic bg-primary/10 p-3 border-l-4 border-primary">
+            {insight.powerQuestion}
+          </p>
+        </div>
+      )}
+
+      {insight.metaphor && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider">
+            📖 Today's Story
+          </h3>
+          <p className="text-foreground font-bold leading-relaxed text-sm bg-secondary/30 p-3">
+            {insight.metaphor}
+          </p>
         </div>
       )}
 
@@ -81,6 +101,39 @@ const InsightCard = ({ insight }: InsightCardProps) => {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {insight.todaysPitfall && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider text-destructive">
+            ⚠️ Today's Pitfall
+          </h3>
+          <p className="text-foreground font-bold leading-relaxed text-sm bg-destructive/10 p-3 border-l-4 border-destructive">
+            {insight.todaysPitfall}
+          </p>
+        </div>
+      )}
+
+      {insight.theAnchor && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider">
+            The Anchor
+          </h3>
+          <p className="text-foreground font-bold leading-relaxed text-sm bg-primary/5 p-3 border-l-4 border-primary">
+            {insight.theAnchor}
+          </p>
+        </div>
+      )}
+
+      {insight.carryThis && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider">
+            💪 Carry This
+          </h3>
+          <p className="text-foreground font-black leading-relaxed text-base text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 border-2 border-foreground italic">
+            "{insight.carryThis}"
+          </p>
         </div>
       )}
 

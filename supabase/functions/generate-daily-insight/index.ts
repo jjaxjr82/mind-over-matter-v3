@@ -34,13 +34,16 @@ Generate a structured daily insight in JSON format with these exact fields:
     "text": "A relevant inspirational quote",
     "author": "Author name"
   },
-  "mainInsight": "2-3 sentences of core insight based on the user's context",
+  "powerQuestion": "One powerful, specific question they should ask themselves today (relates directly to their challenges)",
+  "metaphor": "A concrete, memorable metaphor or 2-sentence story that illustrates the day's theme (make it visual and relatable)",
   "actionItems": [
     {"text": "Specific actionable item 1"},
     {"text": "Specific actionable item 2"},
     {"text": "Specific actionable item 3"}
   ],
-  "deeperInsight": "A deeper philosophical reflection (2-3 sentences)",
+  "todaysPitfall": "One specific behavior or pattern to actively avoid today (based on their challenges)",
+  "theAnchor": "A short, memorable story or real example (2-3 sentences) tied directly to their specific challenge that they can recall when struggling",
+  "carryThis": "One single-sentence mantra to repeat when struggling (make it personal and powerful)",
   "recommendations": [
     {
       "type": "article or podcast",
@@ -89,13 +92,16 @@ Generate a JSON response with these exact fields:
     "text": "An inspiring quote about resilience or momentum",
     "author": "Quote author"
   },
-  "mainInsight": "2-3 sentences acknowledging their midday reflection and providing guidance for the afternoon",
+  "powerQuestion": "One powerful question to refocus their afternoon",
+  "metaphor": "A concrete, memorable metaphor or 2-sentence story about adjustment/resilience",
   "actionItems": [
     {"text": "Adjusted action 1 for afternoon"},
     {"text": "Adjusted action 2 for afternoon"},
     {"text": "Adjusted action 3 for afternoon"}
   ],
-  "deeperInsight": "A supportive reflection on their progress (1-2 sentences)",
+  "todaysPitfall": "One specific thing to avoid this afternoon (based on their midday reflection)",
+  "theAnchor": "A short, memorable example (2-3 sentences) about recovery or momentum that relates to their situation",
+  "carryThis": "One single-sentence mantra for the afternoon",
   "recommendations": [
     {
       "type": "article or podcast",
