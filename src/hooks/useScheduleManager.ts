@@ -51,6 +51,24 @@ export const useScheduleManager = () => {
     
     setIsLoading(true);
     try {
+      // Load focus areas from user_settings table
+      const { data: settingsData, error: settingsError } = await externalClient
+        .from('user_settings')
+        .select('setting_value')
+        .eq('user_id', user.id)
+        .eq('setting_key', 'focus_areas')
+        .maybeSingle();
+
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        console.error('Error loading settings:', settingsError);
+      }
+
+      const settingsValue = settingsData?.setting_value as { areas?: string[] } | null;
+      const loadedFocusAreas = settingsValue?.areas || [...DEFAULT_FOCUS_AREAS];
+      console.log('✅ Focus areas loaded:', loadedFocusAreas);
+      setFocusAreas(loadedFocusAreas);
+
+      // Load daily schedules
       const { data, error } = await externalClient
         .from('schedules')
         .select('*')
@@ -60,35 +78,8 @@ export const useScheduleManager = () => {
 
       const scheduleMap: Record<string, DaySchedule> = {};
       
-      // Load master focus areas ONLY from master record
-      const masterRecord = data?.find(d => d.day_of_week === '_focus_areas_');
-      console.log('🎯 Master record found:', masterRecord);
-      
-      const masterFocusAreas = masterRecord?.tags || [...DEFAULT_FOCUS_AREAS];
-      console.log('✅ Focus areas loaded from master record:', masterFocusAreas);
-      
-      // Create master record if it doesn't exist
-      if (!masterRecord) {
-        console.log('📝 Creating master record with defaults');
-        const { error: insertError } = await dualInsert('schedules', {
-          day_of_week: '_focus_areas_',
-          work_mode: '_master_',
-          tags: DEFAULT_FOCUS_AREAS,
-          description: 'Master focus areas list',
-          user_id: user.id,
-        });
-        
-        if (insertError) {
-          console.error('❌ Error creating master record:', insertError);
-        } else {
-          console.log('✅ Master record created successfully');
-        }
-      }
-      
-      // Load daily schedules - focus areas stored in description field
+      // Load daily schedules
       data?.forEach((schedule) => {
-        if (schedule.day_of_week === '_focus_areas_') return; // Skip master record
-        
         const tags = schedule.tags || [];
         const workMode = tags.find((t: string) => WORK_MODES.includes(t as any)) || 'WFH';
         
@@ -105,6 +96,7 @@ export const useScheduleManager = () => {
         };
       });
 
+      // Initialize empty schedules for days without data
       DAYS.forEach((day) => {
         if (!scheduleMap[day]) {
           scheduleMap[day] = {
@@ -116,7 +108,6 @@ export const useScheduleManager = () => {
       });
 
       setSchedules(scheduleMap);
-      setFocusAreas(masterFocusAreas);
     } catch (error: any) {
       console.error('Error loading schedules:', error);
       toast.error('Failed to load schedules');
@@ -155,40 +146,32 @@ export const useScheduleManager = () => {
     const updatedAreas = [...focusAreas, trimmed];
     setFocusAreas(updatedAreas);
     
-    // Save immediately to master record
+    // Save to user_settings table (upsert: update if exists, insert if not)
     try {
       console.log('Adding focus area:', trimmed);
-      const { data: existing, error: selectError } = await externalClient
-        .from('schedules')
-        .select('id')
-        .eq('day_of_week', '_focus_areas_')
-        .maybeSingle();
-
-      console.log('Existing master record:', existing);
       
-      if (selectError) {
-        console.error('Error checking master record:', selectError);
-        throw selectError;
-      }
-
+      // Check if setting exists
+      const { data: existing } = await externalClient
+        .from('user_settings')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('setting_key', 'focus_areas')
+        .maybeSingle();
+      
       if (existing) {
-        console.log('Updating existing master record');
-        const { error: updateError } = await dualUpdate('schedules', 
-          { tags: updatedAreas },
+        // Update existing
+        const { error: updateError } = await dualUpdate('user_settings',
+          { setting_value: { areas: updatedAreas } },
           { column: 'id', value: existing.id }
         );
-        
         if (updateError) throw updateError;
       } else {
-        console.log('Creating new master record');
-        const { error: insertError } = await dualInsert('schedules', {
-          day_of_week: '_focus_areas_',
-          work_mode: '_master_',
-          tags: updatedAreas,
-          description: 'Master focus areas list',
+        // Insert new
+        const { error: insertError } = await dualInsert('user_settings', {
           user_id: user.id,
+          setting_key: 'focus_areas',
+          setting_value: { areas: updatedAreas },
         });
-        
         if (insertError) throw insertError;
       }
       
@@ -219,24 +202,20 @@ export const useScheduleManager = () => {
       return updated;
     });
     
-    // Update master record immediately
+    // Update user_settings table
     try {
       console.log('Removing focus area:', area);
-      const { data: existing, error: selectError } = await externalClient
-        .from('schedules')
+      
+      const { data: existing } = await externalClient
+        .from('user_settings')
         .select('id')
-        .eq('day_of_week', '_focus_areas_')
+        .eq('user_id', user.id)
+        .eq('setting_key', 'focus_areas')
         .maybeSingle();
-
-      if (selectError) {
-        console.error('Error checking master record:', selectError);
-        throw selectError;
-      }
-
+      
       if (existing) {
-        console.log('Updating master record after removal');
-        const { error: updateError } = await dualUpdate('schedules',
-          { tags: updatedAreas },
+        const { error: updateError } = await dualUpdate('user_settings',
+          { setting_value: { areas: updatedAreas } },
           { column: 'id', value: existing.id }
         );
         
@@ -256,14 +235,14 @@ export const useScheduleManager = () => {
     
     setIsSaving(true);
     try {
-      // Delete all day schedules (keep master focus areas record)
+      // Delete all existing schedules for this user
       await dualDeleteWhere('schedules', [
-        { column: 'day_of_week', value: '_focus_areas_', operator: 'neq' }
+        { column: 'user_id', value: user.id, operator: 'eq' }
       ]);
       
+      // Insert all schedules with valid data only
       const insertData = Object.values(schedules).map((schedule) => ({
         day_of_week: schedule.day_of_week,
-        work_mode: schedule.work_mode,
         tags: [schedule.work_mode, ...schedule.focus_areas],
         description: '',
         user_id: user.id,
