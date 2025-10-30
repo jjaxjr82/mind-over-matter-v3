@@ -1,7 +1,7 @@
 import { ArrowLeft, Save, Plus, X, Sun, Target, BookOpen, Calendar, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { externalClient } from '@/integrations/supabase/externalClient';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ const ScheduleManager = () => {
   // Check authentication
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await externalClient.auth.getSession();
       if (!session) {
         nav('/auth');
       }
@@ -24,7 +24,7 @@ const ScheduleManager = () => {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = externalClient.auth.onAuthStateChange((event, session) => {
       if (!session) {
         nav('/auth');
       }

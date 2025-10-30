@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { externalClient } from "@/integrations/supabase/externalClient";
+import { dualInsert, dualUpdate, dualDelete } from "@/integrations/supabase/dualWrite";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -105,7 +107,7 @@ const seedUserWisdom = async (userId: string) => {
     is_active: true
   }));
 
-  await supabase.from('wisdom_library').insert(entries);
+  await dualInsert('wisdom_library', entries);
 };
 
 const seedUserChallenges = async (userId: string) => {
@@ -127,7 +129,7 @@ const seedUserChallenges = async (userId: string) => {
     };
   });
 
-  await supabase.from('challenges').insert(entries);
+  await dualInsert('challenges', entries);
 };
 
 const Index = () => {
@@ -163,7 +165,7 @@ const Index = () => {
     const checkAuth = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await externalClient.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
@@ -176,7 +178,7 @@ const Index = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = externalClient.auth.onAuthStateChange((event, session) => {
       if (!session) {
         navigate("/auth");
       } else {
@@ -193,7 +195,7 @@ const Index = () => {
     if (!user) return;
 
     try {
-      const { data: scheduleData, error: scheduleError } = await supabase.from("schedules").select("*").eq("user_id", user.id);
+      const { data: scheduleData, error: scheduleError } = await externalClient.from("schedules").select("*").eq("user_id", user.id);
 
       if (scheduleError) throw scheduleError;
 
@@ -243,7 +245,7 @@ const Index = () => {
       setIsLoading(true);
       try {
         // Load wisdom entries
-        const { data: wisdomData, error: wisdomError } = await supabase
+        const { data: wisdomData, error: wisdomError } = await externalClient
           .from("wisdom_library")
           .select("*")
           .eq("user_id", user.id)
@@ -254,7 +256,7 @@ const Index = () => {
         // Seed wisdom sources if empty
         if (!wisdomData || wisdomData.length === 0) {
           await seedUserWisdom(user.id);
-          const { data: reloadedWisdom } = await supabase
+          const { data: reloadedWisdom } = await externalClient
             .from("wisdom_library")
             .select("*")
             .eq("user_id", user.id)
@@ -265,7 +267,7 @@ const Index = () => {
         }
 
         // Load challenges
-        const { data: challengesData, error: challengesError } = await supabase
+        const { data: challengesData, error: challengesError } = await externalClient
           .from("challenges")
           .select("*")
           .eq("user_id", user.id)
@@ -276,7 +278,7 @@ const Index = () => {
         // Seed challenges if empty
         if (!challengesData || challengesData.length === 0) {
           await seedUserChallenges(user.id);
-          const { data: reloadedChallenges } = await supabase
+          const { data: reloadedChallenges } = await externalClient
             .from("challenges")
             .select("*")
             .eq("user_id", user.id)
@@ -296,7 +298,7 @@ const Index = () => {
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
 
-        const { data: weekLogsData, error: weekLogsError } = await supabase
+        const { data: weekLogsData, error: weekLogsError } = await externalClient
           .from("daily_logs")
           .select("*")
           .eq("user_id", user.id)
@@ -323,7 +325,7 @@ const Index = () => {
         const todayDayName = DAYS[todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1];
         const todaySchedule = loadedWeekSchedule[todayDayName];
 
-        const { data: logData, error: logError } = await supabase
+        const { data: logData, error: logError } = await externalClient
           .from("daily_logs")
           .select("*")
           .eq("user_id", user.id)
@@ -361,15 +363,11 @@ const Index = () => {
             user_id: user.id,
           };
 
-          const { data: insertedLog, error: insertError } = await supabase
-            .from("daily_logs")
-            .insert([newLog])
-            .select()
-            .single();
+          const { data: insertedLog, error: insertError } = await dualInsert("daily_logs", [newLog]);
 
           if (insertError) throw insertError;
           const log = {
-            ...insertedLog,
+            ...(insertedLog?.[0] || newLog),
             morning_follow_up: [],
             midday_follow_up: [],
           };
@@ -398,7 +396,7 @@ const Index = () => {
       if (!dailyLog) return;
 
       try {
-        const { error } = await supabase.from("daily_logs").update(updates).eq("id", dailyLog.id);
+        const { error } = await dualUpdate("daily_logs", updates, { column: "id", value: dailyLog.id });
 
         if (error) throw error;
 
@@ -455,21 +453,21 @@ const Index = () => {
           ...updates,
         };
 
-        const { data, error } = await supabase.from("daily_logs").insert([newLog]).select().single();
+        const { data, error } = await dualInsert("daily_logs", [newLog]);
 
         if (error) throw error;
 
         setWeeklyLogs({
           ...weeklyLogs,
           [day]: {
-            ...data,
+            ...(data?.[0] || newLog),
             morning_follow_up: [],
             midday_follow_up: [],
           },
         });
       } else {
         // Update existing log
-        const { error } = await supabase.from("daily_logs").update(updates).eq("id", dayLog.id);
+        const { error } = await dualUpdate("daily_logs", updates, { column: "id", value: dayLog.id });
 
         if (error) throw error;
 
@@ -585,7 +583,7 @@ const Index = () => {
       const challenge = challenges.find((c) => c.id === id);
       if (!challenge) return;
 
-      const { error } = await supabase.from("challenges").update({ is_active: !challenge.is_active }).eq("id", id);
+      const { error } = await dualUpdate("challenges", { is_active: !challenge.is_active }, { column: "id", value: id });
 
       if (error) throw error;
 
@@ -598,7 +596,7 @@ const Index = () => {
 
   const handleDeleteChallenge = async (id: string) => {
     try {
-      const { error } = await supabase.from("challenges").delete().eq("id", id);
+      const { error } = await dualDelete("challenges", { column: "id", value: id });
 
       if (error) throw error;
 
@@ -613,22 +611,18 @@ const Index = () => {
   const handleAddChallenge = async (name: string, description: string) => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
-        .from("challenges")
-        .insert([
-          {
-            name,
-            description,
-            is_active: true,
-            user_id: user.id,
-          },
-        ])
-        .select()
-        .single();
+      const { data, error } = await dualInsert("challenges", [
+        {
+          name,
+          description,
+          is_active: true,
+          user_id: user.id,
+        },
+      ]);
 
       if (error) throw error;
 
-      setChallenges([...challenges, data]);
+      setChallenges([...challenges, data?.[0]]);
       toast.success("Challenge added");
     } catch (error: any) {
       console.error("Error adding challenge:", error);
@@ -642,7 +636,7 @@ const Index = () => {
       const wisdom = wisdomEntries.find((w) => w.id === id);
       if (!wisdom) return;
 
-      const { error } = await supabase.from("wisdom_library").update({ is_active: !wisdom.is_active }).eq("id", id);
+      const { error } = await dualUpdate("wisdom_library", { is_active: !wisdom.is_active }, { column: "id", value: id });
 
       if (error) throw error;
 
@@ -656,23 +650,19 @@ const Index = () => {
   const handleAddWisdom = async (name: string, description: string, tag: string) => {
     if (!user) return;
     try {
-      const { data, error } = await supabase
-        .from("wisdom_library")
-        .insert([
-          {
-            name,
-            description,
-            tag,
-            is_active: true,
-            user_id: user.id,
-          },
-        ])
-        .select()
-        .single();
+      const { data, error } = await dualInsert("wisdom_library", [
+        {
+          name,
+          description,
+          tag,
+          is_active: true,
+          user_id: user.id,
+        },
+      ]);
 
       if (error) throw error;
 
-      setWisdomEntries([...wisdomEntries, data]);
+      setWisdomEntries([...wisdomEntries, data?.[0]]);
       toast.success("Wisdom source added");
     } catch (error: any) {
       console.error("Error adding wisdom:", error);
@@ -682,7 +672,7 @@ const Index = () => {
 
   const handleDeleteWisdom = async (id: string) => {
     try {
-      const { error } = await supabase.from("wisdom_library").delete().eq("id", id);
+      const { error } = await dualDelete("wisdom_library", { column: "id", value: id });
 
       if (error) throw error;
 
@@ -697,9 +687,8 @@ const Index = () => {
   const handleResetDay = async () => {
     if (!user || !dailyLog) return;
 
-    const { error } = await supabase
-      .from("daily_logs")
-      .update({
+    const { error } = await dualUpdate("daily_logs",
+      {
         situation: null,
         morning_insight: null,
         morning_follow_up: [],
@@ -708,8 +697,9 @@ const Index = () => {
         win: null,
         weakness: null,
         tomorrows_prep: null,
-      })
-      .eq("id", dailyLog.id);
+      },
+      { column: "id", value: dailyLog.id }
+    );
 
     if (!error) {
       setDailyLog({
@@ -1095,7 +1085,7 @@ const Index = () => {
                 variant="ghost" 
                 size="icon" 
                 onClick={async () => {
-                  await supabase.auth.signOut();
+                  await externalClient.auth.signOut();
                   navigate("/auth");
                 }}
                 className="text-muted-foreground"

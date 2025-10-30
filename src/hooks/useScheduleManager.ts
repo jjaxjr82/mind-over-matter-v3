@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { externalClient } from '@/integrations/supabase/externalClient';
+import { dualInsert, dualUpdate, dualDeleteWhere } from '@/integrations/supabase/dualWrite';
 import { toast } from 'sonner';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -27,12 +28,12 @@ export const useScheduleManager = () => {
   // Get authenticated user
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await externalClient.auth.getSession();
       setUser(session?.user || null);
     };
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = externalClient.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
     });
 
@@ -50,7 +51,7 @@ export const useScheduleManager = () => {
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await externalClient
         .from('schedules')
         .select('*')
         .eq('user_id', user.id);
@@ -69,14 +70,12 @@ export const useScheduleManager = () => {
       // Create master record if it doesn't exist
       if (!masterRecord) {
         console.log('📝 Creating master record with defaults');
-        const { error: insertError } = await supabase
-          .from('schedules')
-          .insert({
-            day_of_week: '_focus_areas_',
-            tags: DEFAULT_FOCUS_AREAS,
-            description: 'Master focus areas list',
-            user_id: user.id,
-          });
+        const { error: insertError } = await dualInsert('schedules', {
+          day_of_week: '_focus_areas_',
+          tags: DEFAULT_FOCUS_AREAS,
+          description: 'Master focus areas list',
+          user_id: user.id,
+        });
         
         if (insertError) {
           console.error('❌ Error creating master record:', insertError);
@@ -158,7 +157,7 @@ export const useScheduleManager = () => {
     // Save immediately to master record
     try {
       console.log('Adding focus area:', trimmed);
-      const { data: existing, error: selectError } = await supabase
+      const { data: existing, error: selectError } = await externalClient
         .from('schedules')
         .select('id')
         .eq('day_of_week', '_focus_areas_')
@@ -173,22 +172,20 @@ export const useScheduleManager = () => {
 
       if (existing) {
         console.log('Updating existing master record');
-        const { error: updateError } = await supabase
-          .from('schedules')
-          .update({ tags: updatedAreas })
-          .eq('id', existing.id);
+        const { error: updateError } = await dualUpdate('schedules', 
+          { tags: updatedAreas },
+          { column: 'id', value: existing.id }
+        );
         
         if (updateError) throw updateError;
       } else {
         console.log('Creating new master record');
-        const { error: insertError } = await supabase
-          .from('schedules')
-          .insert({
-            day_of_week: '_focus_areas_',
-            tags: updatedAreas,
-            description: 'Master focus areas list',
-            user_id: user.id,
-          });
+        const { error: insertError } = await dualInsert('schedules', {
+          day_of_week: '_focus_areas_',
+          tags: updatedAreas,
+          description: 'Master focus areas list',
+          user_id: user.id,
+        });
         
         if (insertError) throw insertError;
       }
@@ -223,7 +220,7 @@ export const useScheduleManager = () => {
     // Update master record immediately
     try {
       console.log('Removing focus area:', area);
-      const { data: existing, error: selectError } = await supabase
+      const { data: existing, error: selectError } = await externalClient
         .from('schedules')
         .select('id')
         .eq('day_of_week', '_focus_areas_')
@@ -236,10 +233,10 @@ export const useScheduleManager = () => {
 
       if (existing) {
         console.log('Updating master record after removal');
-        const { error: updateError } = await supabase
-          .from('schedules')
-          .update({ tags: updatedAreas })
-          .eq('id', existing.id);
+        const { error: updateError } = await dualUpdate('schedules',
+          { tags: updatedAreas },
+          { column: 'id', value: existing.id }
+        );
         
         if (updateError) throw updateError;
       }
@@ -258,10 +255,9 @@ export const useScheduleManager = () => {
     setIsSaving(true);
     try {
       // Delete all day schedules (keep master focus areas record)
-      await supabase
-        .from('schedules')
-        .delete()
-        .neq('day_of_week', '_focus_areas_');
+      await dualDeleteWhere('schedules', [
+        { column: 'day_of_week', value: '_focus_areas_', operator: 'neq' }
+      ]);
       
       const insertData = Object.values(schedules).map((schedule) => ({
         day_of_week: schedule.day_of_week,
@@ -270,9 +266,7 @@ export const useScheduleManager = () => {
         user_id: user.id,
       }));
 
-      const { error } = await supabase
-        .from('schedules')
-        .insert(insertData);
+      const { error } = await dualInsert('schedules', insertData);
 
       if (error) {
         console.error('Save error:', error);
