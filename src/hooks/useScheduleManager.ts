@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { externalClient } from '@/integrations/supabase/externalClient';
+import { supabase } from '@/integrations/supabase/client';
 import { dualInsert, dualUpdate, dualDeleteWhere } from '@/integrations/supabase/dualWrite';
+import { 
+  transformScheduleForExternalDB, 
+  transformScheduleForCloudDB,
+  WorkMode
+} from '@/utils/databaseSchemaAdapters';
 import { toast } from 'sonner';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -13,7 +19,7 @@ export const DEFAULT_FOCUS_AREAS: string[] = [];
 export interface DaySchedule {
   id?: string;
   day_of_week: string;
-  work_mode: string;
+  work_mode: WorkMode;
   focus_areas: string[];
 }
 
@@ -236,31 +242,94 @@ export const useScheduleManager = () => {
     
     setIsSaving(true);
     try {
-      // Delete from external DB
+      console.log('💾 Starting schedule save...');
+      
+      // ============================================================
+      // PHASE 1: Save to External Database (PRIMARY)
+      // Schema: work_mode as separate column, tags for focus areas only
+      // ============================================================
+      
+      // 1a. Delete existing schedules from external DB
       const { error: extDeleteError } = await externalClient
         .from('schedules')
         .delete()
         .eq('user_id', user.id);
       
-      if (extDeleteError) throw extDeleteError;
+      if (extDeleteError) {
+        console.error('❌ External DB delete failed:', extDeleteError);
+        throw new Error(`External DB delete failed: ${extDeleteError.message}`);
+      }
       
-      // Insert into external DB - store work_mode in tags to avoid constraint issues
-      const externalData = Object.values(schedules).map((schedule) => ({
-        day_of_week: schedule.day_of_week,
-        tags: [schedule.work_mode, ...schedule.focus_areas], // Work mode + focus areas in tags
-        description: '',
-        user_id: user.id,
-      }));
+      console.log('✅ External DB: Old schedules deleted');
       
+      // 1b. Transform schedules for external DB format
+      const externalData = Object.values(schedules).map((schedule) => 
+        transformScheduleForExternalDB(schedule, user.id)
+      );
+      
+      console.log('📦 External DB data prepared:', externalData.length, 'schedules');
+      console.log('🔍 Sample external data:', externalData[0]);
+      
+      // 1c. Insert new schedules into external DB
       const { error: extInsertError } = await externalClient
         .from('schedules')
         .insert(externalData);
       
-      if (extInsertError) throw extInsertError;
+      if (extInsertError) {
+        console.error('❌ External DB insert failed:', extInsertError);
+        throw new Error(`External DB insert failed: ${extInsertError.message}`);
+      }
       
+      console.log('✅ External DB: Schedules saved successfully');
+      
+      // ============================================================
+      // PHASE 2: Save to Lovable Cloud Database (SECONDARY, BEST-EFFORT)
+      // Schema: NO work_mode column, everything in tags array
+      // ============================================================
+      
+      try {
+        // 2a. Delete existing schedules from Cloud DB
+        const { error: cloudDeleteError } = await supabase
+          .from('schedules')
+          .delete()
+          .eq('user_id', user.id);
+        
+        if (cloudDeleteError) {
+          console.warn('⚠️ Cloud DB delete warning:', cloudDeleteError.message);
+          // Don't throw - best effort only
+        } else {
+          console.log('✅ Cloud DB: Old schedules deleted');
+        }
+        
+        // 2b. Transform schedules for Cloud DB format
+        const cloudData = Object.values(schedules).map((schedule) => 
+          transformScheduleForCloudDB(schedule, user.id)
+        );
+        
+        console.log('📦 Cloud DB data prepared:', cloudData.length, 'schedules');
+        console.log('🔍 Sample cloud data:', cloudData[0]);
+        
+        // 2c. Insert new schedules into Cloud DB
+        const { error: cloudInsertError } = await supabase
+          .from('schedules')
+          .insert(cloudData);
+        
+        if (cloudInsertError) {
+          console.warn('⚠️ Cloud DB insert warning:', cloudInsertError.message);
+          // Don't throw - best effort only
+        } else {
+          console.log('✅ Cloud DB: Schedules synced successfully');
+        }
+      } catch (cloudError: any) {
+        // Cloud DB sync is best-effort, log but don't fail
+        console.warn('⚠️ Cloud DB sync failed (non-critical):', cloudError.message);
+      }
+      
+      console.log('✅ All operations complete');
       toast.success('Schedule saved!');
+      
     } catch (error: any) {
-      console.error('Error saving schedules:', error);
+      console.error('❌ Critical error saving schedules:', error);
       toast.error(`Failed to save schedules: ${error.message}`);
     } finally {
       setIsSaving(false);
