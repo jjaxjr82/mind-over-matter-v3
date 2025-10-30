@@ -77,6 +77,9 @@ interface DailyLog {
     morning?: number[];
     midday?: number[];
   };
+  morning_complete?: boolean;
+  midday_complete?: boolean;
+  evening_complete?: boolean;
 }
 
 interface WeekSchedule {
@@ -364,6 +367,9 @@ const Index = () => {
             weakness: log.weakness || "",
             tomorrows_prep: log.tomorrows_prep || "",
             completed_action_items: log.completed_action_items as any,
+            morning_complete: log.morning_complete,
+            midday_complete: log.midday_complete,
+            evening_complete: log.evening_complete,
           };
         });
         setWeeklyLogs(weekLogsMap);
@@ -411,6 +417,9 @@ const Index = () => {
             weakness: logData.weakness || "",
             tomorrows_prep: logData.tomorrows_prep || "",
             completed_action_items: logData.completed_action_items as any,
+            morning_complete: logData.morning_complete,
+            midday_complete: logData.midday_complete,
+            evening_complete: logData.evening_complete,
           };
           setDailyLog(log);
           setSituationText(log.situation || "");
@@ -433,6 +442,12 @@ const Index = () => {
           setMorningCompleted(!!logData.morning_complete);
           setMiddayCompleted(!!logData.midday_complete);
           setEveningCompleted(!!logData.evening_complete);
+          
+          // Update weeklyLogs state to keep it in sync
+          setWeeklyLogs(prev => ({
+            ...prev,
+            [dayName]: log
+          }));
         } else {
           // Create new log for this date
           const newLog = {
@@ -455,6 +470,9 @@ const Index = () => {
             ...(insertedLog?.[0] || newLog),
             morning_follow_up: [],
             midday_follow_up: [],
+            morning_complete: false,
+            midday_complete: false,
+            evening_complete: false,
           };
           setDailyLog(log);
           setSituationText(log.situation || "");
@@ -472,6 +490,12 @@ const Index = () => {
           setMorningCompleted(false);
           setMiddayCompleted(false);
           setEveningCompleted(false);
+          
+          // Update weeklyLogs state to keep it in sync
+          setWeeklyLogs(prev => ({
+            ...prev,
+            [dayName]: log
+          }));
         }
       } catch (error: any) {
         console.error("Error loading daily log:", error);
@@ -561,6 +585,16 @@ const Index = () => {
         setCompletedActionItems({ ...completedActionItems, morning: [] });
       }
       
+      // Update weeklyLogs state
+      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      setWeeklyLogs(prev => ({
+        ...prev,
+        [dayName]: {
+          ...prev[dayName],
+          morning_complete: false,
+        }
+      }));
+      
       toast.success("Morning reset - you can now generate a fresh insight");
     } catch (error: any) {
       console.error("Error resetting morning:", error);
@@ -600,6 +634,16 @@ const Index = () => {
         setCompletedActionItems({ ...completedActionItems, midday: [] });
       }
       
+      // Update weeklyLogs state
+      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      setWeeklyLogs(prev => ({
+        ...prev,
+        [dayName]: {
+          ...prev[dayName],
+          midday_complete: false,
+        }
+      }));
+      
       toast.success("Midday reset - you can now generate a fresh insight");
     } catch (error: any) {
       console.error("Error resetting midday:", error);
@@ -636,6 +680,16 @@ const Index = () => {
         setDailyLog(refreshed as any);
         setEveningCompleted(false);
       }
+      
+      // Update weeklyLogs state
+      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      setWeeklyLogs(prev => ({
+        ...prev,
+        [dayName]: {
+          ...prev[dayName],
+          evening_complete: false,
+        }
+      }));
       
       toast.success("Evening reset - you can now reflect again");
     } catch (error: any) {
@@ -997,11 +1051,41 @@ const Index = () => {
     }
   };
 
-  const markPhaseComplete = (phase: "morning" | "midday" | "evening") => {
-    if (phase === "morning") setMorningCompleted(true);
-    if (phase === "midday") setMiddayCompleted(true);
-    if (phase === "evening") setEveningCompleted(true);
-    toast.success(`${phase.charAt(0).toUpperCase() + phase.slice(1)} phase complete!`);
+  const markPhaseComplete = async (phase: "morning" | "midday" | "evening") => {
+    if (!dailyLog?.id) return;
+    
+    try {
+      const updates: any = {};
+      
+      if (phase === "morning") {
+        updates.morning_complete = true;
+        setMorningCompleted(true);
+      } else if (phase === "midday") {
+        updates.midday_complete = true;
+        setMiddayCompleted(true);
+      } else if (phase === "evening") {
+        updates.evening_complete = true;
+        setEveningCompleted(true);
+      }
+      
+      // Save to database
+      await updateLog(updates);
+      
+      // Update weeklyLogs state with the new completion status
+      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      setWeeklyLogs(prev => ({
+        ...prev,
+        [dayName]: {
+          ...prev[dayName],
+          [`${phase}_complete`]: true
+        }
+      }));
+      
+      toast.success(`${phase.charAt(0).toUpperCase() + phase.slice(1)} phase complete!`);
+    } catch (error: any) {
+      console.error(`Error marking ${phase} complete:`, error);
+      toast.error(`Failed to mark ${phase} complete`);
+    }
   };
 
   const reopenPhase = async (phase: "morning" | "midday" | "evening") => {
