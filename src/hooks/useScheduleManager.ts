@@ -52,7 +52,6 @@ export const useScheduleManager = () => {
     setIsLoading(true);
     try {
       // Load focus areas from user_settings table
-      // Try to load from external DB first, fall back to default if table doesn't exist
       let loadedFocusAreas = [...DEFAULT_FOCUS_AREAS];
       
       try {
@@ -74,7 +73,7 @@ export const useScheduleManager = () => {
       console.log('✅ Focus areas loaded:', loadedFocusAreas);
       setFocusAreas(loadedFocusAreas);
 
-      // Load daily schedules
+      // Load daily schedules from external DB (has work_mode column)
       const { data, error } = await externalClient
         .from('schedules')
         .select('*')
@@ -84,21 +83,13 @@ export const useScheduleManager = () => {
 
       const scheduleMap: Record<string, DaySchedule> = {};
       
-      // Load daily schedules
-      data?.forEach((schedule) => {
-        const tags = schedule.tags || [];
-        const workMode = tags.find((t: string) => WORK_MODES.includes(t as any)) || 'WFH';
-        
-        // Focus areas are stored in separate tags for each day
-        const focusAreasForDay = tags.filter((t: string) => 
-          !WORK_MODES.includes(t as any) && !ENERGY_LEVELS.includes(t as any)
-        );
-        
+      // Parse schedules from external DB
+      data?.forEach((schedule: any) => {
         scheduleMap[schedule.day_of_week] = {
           id: schedule.id,
           day_of_week: schedule.day_of_week,
-          work_mode: workMode,
-          focus_areas: focusAreasForDay,
+          work_mode: schedule.work_mode || 'WFH',
+          focus_areas: schedule.tags || [],
         };
       });
 
@@ -241,27 +232,31 @@ export const useScheduleManager = () => {
     
     setIsSaving(true);
     try {
-      // Delete all existing schedules for this user
-      await dualDeleteWhere('schedules', [
-        { column: 'user_id', value: user.id, operator: 'eq' }
-      ]);
+      // Handle both databases separately due to schema differences
       
-      // Insert all schedules with valid data only
-      // Note: work_mode is stored in tags array to avoid constraint issues with external DB
-      const insertData = Object.values(schedules).map((schedule) => ({
+      // 1. Delete from external DB (has work_mode column)
+      const { error: extDeleteError } = await externalClient
+        .from('schedules')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (extDeleteError) throw extDeleteError;
+      
+      // 2. Insert into external DB with work_mode column
+      const externalData = Object.values(schedules).map((schedule) => ({
         day_of_week: schedule.day_of_week,
-        tags: [schedule.work_mode, ...schedule.focus_areas],
+        work_mode: schedule.work_mode,
+        tags: schedule.focus_areas, // Only focus areas in tags for external DB
         description: '',
         user_id: user.id,
       }));
-
-      const { error } = await dualInsert('schedules', insertData);
-
-      if (error) {
-        console.error('Save error:', error);
-        throw error;
-      }
-
+      
+      const { error: extInsertError } = await externalClient
+        .from('schedules')
+        .insert(externalData);
+      
+      if (extInsertError) throw extInsertError;
+      
       toast.success('Schedule saved!');
     } catch (error: any) {
       console.error('Error saving schedules:', error);
