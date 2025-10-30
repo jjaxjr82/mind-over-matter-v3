@@ -99,7 +99,7 @@ const ScheduleManager = () => {
                 variant="ghost" 
                 size="icon"
                 onClick={async () => {
-                  await supabase.auth.signOut();
+                  await externalClient.auth.signOut();
                   nav('/auth');
                 }}
                 className="text-muted-foreground"
