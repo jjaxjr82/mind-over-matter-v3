@@ -137,7 +137,7 @@ const ScheduleManager = () => {
             </Button>
             <Button
               variant="ghost"
-              className="h-10 px-3 bg-primary/10"
+              className="h-10 px-3 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Calendar className="h-4 w-4 mr-2" />
               <span className="text-sm font-bold">Schedule</span>

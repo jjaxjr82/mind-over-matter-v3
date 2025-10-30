@@ -1437,7 +1437,7 @@ const Index = () => {
               <Button
                 variant="ghost"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="h-10 px-3"
+                className="h-10 px-3 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Sun className="h-4 w-4 mr-2" />
                 <span className="text-sm font-bold">Today</span>
