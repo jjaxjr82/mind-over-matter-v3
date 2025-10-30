@@ -244,6 +244,17 @@ const Index = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
+        // Clean up duplicates first
+        const { cleanupDuplicateChallenges, cleanupDuplicateWisdom } = await import('@/utils/cleanupDuplicates');
+        const [challengesResult, wisdomResult] = await Promise.all([
+          cleanupDuplicateChallenges(user.id),
+          cleanupDuplicateWisdom(user.id)
+        ]);
+        
+        if (challengesResult.removed > 0 || wisdomResult.removed > 0) {
+          toast.success(`Cleaned up ${challengesResult.removed} duplicate challenges and ${wisdomResult.removed} duplicate wisdom entries`);
+        }
+        
         // Load wisdom entries
         const { data: wisdomData, error: wisdomError } = await externalClient
           .from("wisdom_library")
