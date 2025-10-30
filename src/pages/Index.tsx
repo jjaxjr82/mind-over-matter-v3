@@ -504,6 +504,16 @@ const Index = () => {
         .map((w) => w.name)
         .join(", ");
 
+      console.log('🚀 Generating daily insight with context:', {
+        challenges: activeChallenges || "None",
+        wisdomSources: activeWisdomSources || "General wisdom",
+        schedule: schedule[today] || "No schedule set",
+        workMode: todayWorkMode,
+        energyLevel: todayEnergyLevel,
+        focusAreas: todayFocusAreas.join(", ") || "None",
+        situation: dailyLog?.situation || "None",
+      });
+
       const { data, error } = await supabase.functions.invoke("generate-daily-insight", {
         body: {
           challenges: activeChallenges || "None",
@@ -517,16 +527,35 @@ const Index = () => {
       });
 
       if (error) {
-        console.error("Error:", error);
-        toast.error(error.message || "Failed to generate insight");
+        console.error("❌ Edge function error:", error);
+        
+        // Handle specific error cases
+        if (error.message?.includes('AI service not configured')) {
+          toast.error("AI service not configured. Please contact support.");
+        } else if (error.message?.includes('Rate limit')) {
+          toast.error("Rate limit exceeded. Please wait a moment and try again.");
+        } else if (error.message?.includes('Credits exhausted')) {
+          toast.error("AI credits exhausted. Please add credits to your workspace.");
+        } else if (error.message?.includes('FunctionsFetchError')) {
+          toast.error("Could not connect to AI service. The function may still be deploying.");
+        } else {
+          toast.error(error.message || "Failed to generate insight");
+        }
         return;
       }
 
+      if (!data) {
+        console.error("❌ No data returned from edge function");
+        toast.error("No insight generated. Please try again.");
+        return;
+      }
+
+      console.log('✅ Insight generated successfully:', data);
       await updateLog({ morning_insight: data, morning_follow_up: [] });
       toast.success("Daily insight generated!");
     } catch (error: any) {
-      console.error("Error:", error);
-      toast.error("Failed to generate insight");
+      console.error("❌ Unexpected error:", error);
+      toast.error(error.message || "Failed to generate insight");
     } finally {
       setIsGenerating(false);
     }
