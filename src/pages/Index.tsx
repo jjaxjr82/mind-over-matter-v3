@@ -1149,29 +1149,6 @@ const Index = () => {
     );
   };
 
-  const renderMorningQuickRef = () => {
-    if (!dailyLog?.morning_insight || !morningCompleted) return null;
-    
-    return (
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t shadow-lg p-4 z-50">
-        <div className="max-w-4xl mx-auto">
-          <details className="group">
-            <summary className="flex items-center justify-between cursor-pointer list-none">
-              <span className="font-bold text-lg">📋 Today's Action Plan</span>
-              <ChevronDown className="h-5 w-5 transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="mt-4 pt-4 border-t">
-              <MorningQuickReference
-                insight={dailyLog.morning_insight}
-                checkedItems={completedActionItems.morning}
-                onCheckItem={(index) => handleCheckActionItem("morning", index)}
-              />
-            </div>
-          </details>
-        </div>
-      </div>
-    );
-  };
 
   const renderPhase = () => {
     if (!dailyLog) return null;
@@ -1360,7 +1337,7 @@ const Index = () => {
           <CompactPhaseCard
             phase="morning"
             title="Morning Insight Complete"
-            icon={<Sunrise className="h-5 w-5 text-orange-500" />}
+            icon={<Sunrise className="h-4 w-4" />}
             onReopen={() => reopenPhase("morning")}
             onRegenerate={() => generateDailyInsight("morning")}
             onReset={resetMorning}
@@ -1445,7 +1422,7 @@ const Index = () => {
           <CompactPhaseCard
             phase="midday"
             title="Midday Check-In Complete"
-            icon={<Sunset className="h-5 w-5 text-yellow-500" />}
+            icon={<Sun className="h-4 w-4" />}
             onReopen={() => reopenPhase("midday")}
             onRegenerate={() => generateDailyInsight("midday")}
           >
@@ -1533,7 +1510,7 @@ const Index = () => {
           <CompactPhaseCard
             phase="evening"
             title="Evening Reflection Complete"
-            icon={<Moon className="h-5 w-5 text-purple-500" />}
+            icon={<Moon className="h-4 w-4" />}
             onReopen={() => reopenPhase("evening")}
           >
             <div className="space-y-4">
@@ -1693,12 +1670,35 @@ const Index = () => {
             />
           </div>
 
-          <div className="w-full max-w-3xl mx-auto bg-card border border-border rounded-lg p-6 mb-24">
-            <div className="space-y-4">{renderPhase()}</div>
-          </div>
+          {/* Mobile Action Plan - Show above timeline on mobile */}
+          {dailyLog?.morning_insight && morningCompleted && !(morningCompleted && middayCompleted && eveningCompleted) && (
+            <div className="lg:hidden mb-6">
+              <MorningQuickReference
+                insight={dailyLog.morning_insight}
+                checkedItems={completedActionItems.morning}
+                onCheckItem={(index) => handleCheckActionItem("morning", index)}
+              />
+            </div>
+          )}
 
-          {/* Sticky Action Plan Footer */}
-          {renderMorningQuickRef()}
+          {/* Two Column Layout: Timeline + Action Plan */}
+          <div className="flex gap-6 items-start">
+            {/* Main Timeline - Left Column */}
+            <div className="flex-1 w-full max-w-3xl bg-card border border-border rounded-lg p-6">
+              <div className="space-y-4">{renderPhase()}</div>
+            </div>
+
+            {/* Action Plan - Right Column (Sticky Sidebar) */}
+            {dailyLog?.morning_insight && morningCompleted && !(morningCompleted && middayCompleted && eveningCompleted) && (
+              <div className="w-[340px] sticky top-4 hidden lg:block">
+                <MorningQuickReference
+                  insight={dailyLog.morning_insight}
+                  checkedItems={completedActionItems.morning}
+                  onCheckItem={(index) => handleCheckActionItem("morning", index)}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

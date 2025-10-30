@@ -27,22 +27,16 @@ export const CompactPhaseCard = ({
 }: CompactPhaseCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const borderColors = {
-    morning: "border-orange-500",
-    midday: "border-yellow-500",
-    evening: "border-purple-500"
-  };
-
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-      <div className={`border-l-4 ${borderColors[phase]} pl-4 py-3 bg-card rounded-r-lg`}>
+      <div className="border-l-2 border-primary bg-accent/50 rounded-lg p-4">
         <CollapsibleTrigger className="w-full">
           <div className="flex items-center justify-between hover:opacity-80 transition-opacity">
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-green-600" />
               <div className="flex items-center gap-2">
                 {icon}
-                <span className="font-bold text-lg">{title}</span>
+                <span className="font-semibold">{title}</span>
               </div>
               {timestamp && (
                 <span className="text-xs text-muted-foreground">
