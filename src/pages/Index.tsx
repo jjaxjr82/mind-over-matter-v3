@@ -670,6 +670,8 @@ const Index = () => {
         .map((w) => w.name)
         .join(", ");
 
+      const regenerationId = Date.now();
+      
       const requestBody: any = {
         phase,
         challenges: activeChallenges || "None",
@@ -679,6 +681,7 @@ const Index = () => {
         energyLevel: freshEnergyLevel,
         focusAreas: freshFocusAreas.join(", ") || "None",
         situation: dailyLog?.situation || "None",
+        regenerationId, // Force unique generation each time
       };
 
       if (phase === "midday") {
@@ -686,17 +689,20 @@ const Index = () => {
         requestBody.middayReflection = middayAdjustmentText || dailyLog?.midday_adjustment;
       }
 
-      console.log(`🚀 Generating ${phase} insight with context:`, requestBody);
-      console.log('📡 About to call edge function...');
+      console.log(`🚀 Regeneration #${regenerationId} - Generating ${phase} insight with context:`, requestBody);
 
       const { data, error } = await supabase.functions.invoke("generate-daily-insight", {
         body: requestBody,
       });
 
-      console.log('📥 Edge function response:', { data, error, hasData: !!data, dataKeys: data ? Object.keys(data) : [] });
+      console.log(`📥 Regeneration #${regenerationId} - Edge function response:`, { 
+        hasData: !!data, 
+        title: data?.title,
+        firstActionItem: data?.actionItems?.[0]?.text?.substring(0, 50)
+      });
 
       if (error) {
-        console.error("❌ Edge function error:", error);
+        console.error(`❌ Regeneration #${regenerationId} - Edge function error:`, error);
         
         if (error.message?.includes('AI service not configured')) {
           toast.error("AI service not configured. Please contact support.");
@@ -713,27 +719,74 @@ const Index = () => {
       }
 
       if (!data || Object.keys(data).length === 0) {
-        console.error("❌ No data or empty data returned from edge function");
+        console.error(`❌ Regeneration #${regenerationId} - No data returned from edge function`);
         toast.error("No insight generated. Please try again.");
         return;
       }
 
-      console.log('✅ Insight generated successfully:', data);
+      console.log(`✅ Regeneration #${regenerationId} - Insight received successfully:`, { title: data.title });
       
       if (phase === "morning") {
-        // Reset completed action items when regenerating morning insight
-        const newCompletedItems = { ...completedActionItems, morning: [] };
-        setCompletedActionItems(newCompletedItems);
+        console.log(`💾 Regeneration #${regenerationId} - Saving morning insight to database...`);
         
-        await updateLog({ 
-          morning_insight: data, 
-          morning_follow_up: [],
-          completed_action_items: newCompletedItems
-        });
+        try {
+          // Reset completed action items when regenerating morning insight
+          const newCompletedItems = { ...completedActionItems, morning: [] };
+          setCompletedActionItems(newCompletedItems);
+          
+          await updateLog({ 
+            morning_insight: data, 
+            morning_follow_up: [],
+            completed_action_items: newCompletedItems
+          });
+          
+          console.log(`✅ Regeneration #${regenerationId} - Saved to database successfully`);
+          
+          // Force UI refresh by re-fetching from database
+          const { data: refreshedLog, error: refreshError } = await externalClient
+            .from("daily_logs")
+            .select("*")
+            .eq("id", dailyLog?.id)
+            .maybeSingle();
+          
+          if (refreshError) {
+            console.error(`⚠️ Regeneration #${regenerationId} - Error refreshing log:`, refreshError);
+          } else if (refreshedLog) {
+            setDailyLog(refreshedLog as any);
+            console.log(`🎉 Regeneration #${regenerationId} - UI refreshed with new insight`);
+          }
+          
+        } catch (saveError: any) {
+          console.error(`❌ Regeneration #${regenerationId} - Database save error:`, saveError);
+          toast.error(`Failed to save insight: ${saveError.message}`);
+          return;
+        }
       } else {
-        console.log('💾 About to save midday insight to database...', data);
-        await updateLog({ midday_insight: data });
-        console.log('✅ Midday insight saved to state');
+        console.log(`💾 Regeneration #${regenerationId} - Saving midday insight to database...`);
+        
+        try {
+          await updateLog({ midday_insight: data });
+          console.log(`✅ Regeneration #${regenerationId} - Midday insight saved successfully`);
+          
+          // Force UI refresh
+          const { data: refreshedLog, error: refreshError } = await externalClient
+            .from("daily_logs")
+            .select("*")
+            .eq("id", dailyLog?.id)
+            .maybeSingle();
+          
+          if (refreshError) {
+            console.error(`⚠️ Regeneration #${regenerationId} - Error refreshing log:`, refreshError);
+          } else if (refreshedLog) {
+            setDailyLog(refreshedLog as any);
+            console.log(`🎉 Regeneration #${regenerationId} - UI refreshed with new midday insight`);
+          }
+          
+        } catch (saveError: any) {
+          console.error(`❌ Regeneration #${regenerationId} - Database save error:`, saveError);
+          toast.error(`Failed to save insight: ${saveError.message}`);
+          return;
+        }
       }
       
       toast.success(`${phase === "morning" ? "Daily" : "Midday"} insight generated!`);
