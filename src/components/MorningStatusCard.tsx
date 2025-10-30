@@ -1,14 +1,15 @@
-import { CheckCircle2, RefreshCw, Unlock } from "lucide-react";
+import { CheckCircle2, RefreshCw, Unlock, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface MorningStatusCardProps {
   onReopen: () => void;
   onRegenerate: () => void;
+  onReset: () => void;
   isRegenerating: boolean;
 }
 
-export const MorningStatusCard = ({ onReopen, onRegenerate, isRegenerating }: MorningStatusCardProps) => {
+export const MorningStatusCard = ({ onReopen, onRegenerate, onReset, isRegenerating }: MorningStatusCardProps) => {
   return (
     <Card className="bg-muted/50 border-2">
       <CardContent className="p-4">
@@ -18,6 +19,15 @@ export const MorningStatusCard = ({ onReopen, onRegenerate, isRegenerating }: Mo
             <span className="font-black uppercase tracking-wide text-sm">Morning Complete</span>
           </div>
           <div className="flex gap-2">
+            <Button
+              onClick={onReset}
+              variant="destructive"
+              size="sm"
+              className="h-9 text-xs font-bold uppercase tracking-wider"
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset
+            </Button>
             <Button
               onClick={onReopen}
               variant="secondary"

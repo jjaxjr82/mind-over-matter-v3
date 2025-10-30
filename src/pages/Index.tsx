@@ -508,11 +508,15 @@ const Index = () => {
       if (!dailyLog) return;
 
       try {
-        const { error } = await dualUpdate("daily_logs", updates, { column: "id", value: dailyLog.id });
+        // Use externalClient directly to ensure data goes to the right database
+        const { error } = await externalClient
+          .from("daily_logs")
+          .update(updates)
+          .eq("id", dailyLog.id);
 
         if (error) throw error;
 
-    setDailyLog(prev => prev ? { ...prev, ...updates } : null);
+        setDailyLog(prev => prev ? { ...prev, ...updates } : null);
       } catch (error: any) {
         console.error("Error updating log:", error);
         toast.error("Failed to save changes");
@@ -520,6 +524,43 @@ const Index = () => {
     },
     [dailyLog],
   );
+
+  const resetMorning = async () => {
+    if (!dailyLog?.id) return;
+    
+    try {
+      const { error } = await externalClient
+        .from("daily_logs")
+        .update({
+          morning_complete: false,
+          morning_insight: null,
+          morning_follow_up: []
+        })
+        .eq("id", dailyLog.id);
+      
+      if (error) throw error;
+      
+      // Refresh the UI
+      const { data: refreshed, error: refreshError } = await externalClient
+        .from("daily_logs")
+        .select("*")
+        .eq("id", dailyLog.id)
+        .maybeSingle();
+      
+      if (refreshError) throw refreshError;
+      
+      if (refreshed) {
+        setDailyLog(refreshed as any);
+        setMorningCompleted(false);
+        setCompletedActionItems({ ...completedActionItems, morning: [] });
+      }
+      
+      toast.success("Morning reset - you can now generate a fresh insight");
+    } catch (error: any) {
+      console.error("Error resetting morning:", error);
+      toast.error(`Failed to reset: ${error.message}`);
+    }
+  };
 
   const handleSituationChange = useCallback(
     (value: string) => {
@@ -734,11 +775,17 @@ const Index = () => {
           const newCompletedItems = { ...completedActionItems, morning: [] };
           setCompletedActionItems(newCompletedItems);
           
-          await updateLog({ 
-            morning_insight: data, 
-            morning_follow_up: [],
-            completed_action_items: newCompletedItems
-          });
+          // Use externalClient directly to save to the correct database
+          const { error: saveError } = await externalClient
+            .from("daily_logs")
+            .update({ 
+              morning_insight: data, 
+              morning_follow_up: [],
+              completed_action_items: newCompletedItems
+            })
+            .eq("id", dailyLog?.id);
+          
+          if (saveError) throw saveError;
           
           console.log(`✅ Regeneration #${regenerationId} - Saved to database successfully`);
           
@@ -765,7 +812,14 @@ const Index = () => {
         console.log(`💾 Regeneration #${regenerationId} - Saving midday insight to database...`);
         
         try {
-          await updateLog({ midday_insight: data });
+          // Use externalClient directly to save to the correct database
+          const { error: saveError } = await externalClient
+            .from("daily_logs")
+            .update({ midday_insight: data })
+            .eq("id", dailyLog?.id);
+          
+          if (saveError) throw saveError;
+          
           console.log(`✅ Regeneration #${regenerationId} - Midday insight saved successfully`);
           
           // Force UI refresh
@@ -1153,6 +1207,7 @@ const Index = () => {
             <MorningStatusCard
               onReopen={() => reopenPhase("morning")}
               onRegenerate={() => generateDailyInsight("morning")}
+              onReset={resetMorning}
               isRegenerating={isGenerating}
             />
 
@@ -1180,6 +1235,7 @@ const Index = () => {
           <MorningStatusCard
             onReopen={() => reopenPhase("morning")}
             onRegenerate={() => generateDailyInsight("morning")}
+            onReset={resetMorning}
             isRegenerating={isGenerating}
           />
 
