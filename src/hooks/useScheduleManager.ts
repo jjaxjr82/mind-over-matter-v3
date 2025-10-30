@@ -263,6 +263,7 @@ export const useScheduleManager = () => {
       
       const insertData = Object.values(schedules).map((schedule) => ({
         day_of_week: schedule.day_of_week,
+        work_mode: schedule.work_mode,
         tags: [schedule.work_mode, ...schedule.focus_areas],
         description: '',
         user_id: user.id,
