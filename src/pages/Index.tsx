@@ -37,6 +37,8 @@ import FollowUpChat from "@/components/FollowUpChat";
 import DailyScheduleCard from "@/components/DailyScheduleCard";
 import { WeeklyTracker } from "@/components/WeeklyTracker";
 import { MorningStatusCard } from "@/components/MorningStatusCard";
+import { MiddayStatusCard } from "@/components/MiddayStatusCard";
+import { EveningStatusCard } from "@/components/EveningStatusCard";
 import { MorningQuickReference } from "@/components/MorningQuickReference";
 import { WORK_MODES, ENERGY_LEVELS } from "@/hooks/useScheduleManager";
 
@@ -1357,38 +1359,21 @@ const Index = () => {
       if (hour < 19) {
         return (
           <div className="space-y-4">
-            {/* Collapsed Morning Insight */}
-            {dailyLog.morning_insight && (
-              <div className="bg-card border-2 border-primary/20 rounded-lg p-4">
-                <details className="group">
-                  <summary className="cursor-pointer list-none">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Sun className="h-4 w-4 text-primary" />
-                        <span className="font-black text-sm uppercase tracking-wider">Morning Insight</span>
-                      </div>
-                      <ChevronsRight className="h-4 w-4 transition-transform group-open:rotate-90" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 font-bold">
-                      {dailyLog.morning_insight.quote?.text || "Click to view"}
-                    </p>
-                  </summary>
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <InsightCard insight={dailyLog.morning_insight} />
-                    {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="text-xs font-black uppercase tracking-wider mb-2">Follow-up Conversation</h4>
-                        <FollowUpChat
-                          conversation={dailyLog.morning_follow_up}
-                          onFollowUp={(q) => handleFollowUp(q, "morning")}
-                          isLoading={isGenerating}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </details>
-              </div>
-            )}
+            <MiddayStatusCard
+              insight={dailyLog.midday_insight}
+              adjustment={dailyLog.midday_adjustment}
+              followUp={dailyLog.midday_follow_up}
+              onReopen={() => reopenPhase("midday")}
+              onRegenerate={() => generateDailyInsight("midday")}
+              isRegenerating={isGenerating}
+            />
+            
+            <MorningStatusCard
+              onReopen={() => reopenPhase("morning")}
+              onRegenerate={() => generateDailyInsight("morning")}
+              onReset={resetMorning}
+              isRegenerating={isGenerating}
+            />
             
             <MorningQuickReference
               insight={dailyLog.morning_insight}
@@ -1402,9 +1387,6 @@ const Index = () => {
                 <h3 className="text-lg font-black text-foreground uppercase tracking-wider">Midday Complete</h3>
                 <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Evening unlocks at 7:00 PM</p>
               </div>
-              <Button onClick={() => reopenPhase("midday")} variant="outline" size="sm">
-                Reopen Midday
-              </Button>
             </div>
           </div>
         );
@@ -1412,38 +1394,21 @@ const Index = () => {
 
       return (
         <div className="space-y-4">
-          {/* Collapsed Morning Insight - Always Visible */}
-          {dailyLog.morning_insight && (
-            <div className="bg-card border-2 border-primary/20 rounded-lg p-4">
-              <details className="group">
-                <summary className="cursor-pointer list-none">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sun className="h-4 w-4 text-primary" />
-                      <span className="font-black text-sm uppercase tracking-wider">Morning Insight</span>
-                    </div>
-                    <ChevronsRight className="h-4 w-4 transition-transform group-open:rotate-90" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 font-bold">
-                    {dailyLog.morning_insight.quote?.text || "Click to view"}
-                  </p>
-                </summary>
-                <div className="mt-4 pt-4 border-t border-border">
-                  <InsightCard insight={dailyLog.morning_insight} />
-                  {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-xs font-black uppercase tracking-wider mb-2">Follow-up Conversation</h4>
-                      <FollowUpChat
-                        conversation={dailyLog.morning_follow_up}
-                        onFollowUp={(q) => handleFollowUp(q, "morning")}
-                        isLoading={isGenerating}
-                      />
-                    </div>
-                  )}
-                </div>
-              </details>
-            </div>
-            )}
+          <MiddayStatusCard
+            insight={dailyLog.midday_insight}
+            adjustment={dailyLog.midday_adjustment}
+            followUp={dailyLog.midday_follow_up}
+            onReopen={() => reopenPhase("midday")}
+            onRegenerate={() => generateDailyInsight("midday")}
+            isRegenerating={isGenerating}
+          />
+          
+          <MorningStatusCard
+            onReopen={() => reopenPhase("morning")}
+            onRegenerate={() => generateDailyInsight("morning")}
+            onReset={resetMorning}
+            isRegenerating={isGenerating}
+          />
           
           <MorningQuickReference
             insight={dailyLog.morning_insight}
@@ -1512,38 +1477,34 @@ const Index = () => {
 
     return (
       <div className="space-y-4">
-        {/* Collapsed Morning Insight */}
-        {dailyLog.morning_insight && (
-          <div className="bg-card border-2 border-primary/20 rounded-lg p-4">
-            <details className="group">
-              <summary className="cursor-pointer list-none">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-4 w-4 text-primary" />
-                    <span className="font-black text-sm uppercase tracking-wider">Morning Insight</span>
-                  </div>
-                  <ChevronsRight className="h-4 w-4 transition-transform group-open:rotate-90" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1 font-bold">
-                  {dailyLog.morning_insight.quote?.text || "Click to view"}
-                </p>
-              </summary>
-              <div className="mt-4 pt-4 border-t border-border">
-                <InsightCard insight={dailyLog.morning_insight} />
-                {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="text-xs font-black uppercase tracking-wider mb-2">Follow-up Conversation</h4>
-                    <FollowUpChat
-                      conversation={dailyLog.morning_follow_up}
-                      onFollowUp={(q) => handleFollowUp(q, "morning")}
-                      isLoading={isGenerating}
-                    />
-                  </div>
-                )}
-              </div>
-            </details>
-          </div>
-        )}
+        <EveningStatusCard
+          win={dailyLog.win}
+          weakness={dailyLog.weakness}
+          tomorrowsPrep={dailyLog.tomorrows_prep}
+          onReopen={() => reopenPhase("evening")}
+        />
+        
+        <MiddayStatusCard
+          insight={dailyLog.midday_insight}
+          adjustment={dailyLog.midday_adjustment}
+          followUp={dailyLog.midday_follow_up}
+          onReopen={() => reopenPhase("midday")}
+          onRegenerate={() => generateDailyInsight("midday")}
+          isRegenerating={isGenerating}
+        />
+        
+        <MorningStatusCard
+          onReopen={() => reopenPhase("morning")}
+          onRegenerate={() => generateDailyInsight("morning")}
+          onReset={resetMorning}
+          isRegenerating={isGenerating}
+        />
+        
+        <MorningQuickReference
+          insight={dailyLog.morning_insight}
+          checkedItems={completedActionItems.morning}
+          onCheckItem={(index) => handleCheckActionItem("morning", index)}
+        />
         
         <div className="p-8 bg-secondary border border-primary rounded-lg text-center space-y-6">
           <div>
@@ -1551,9 +1512,6 @@ const Index = () => {
             <h3 className="text-2xl font-black text-foreground uppercase tracking-wider">Day Won.</h3>
             <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Recover. Return Tomorrow.</p>
           </div>
-          <Button onClick={() => reopenPhase("evening")} variant="outline" size="sm">
-            Reopen Evening
-          </Button>
         </div>
       </div>
     );
