@@ -853,7 +853,66 @@ const Index = () => {
   };
 
   const handleFollowUp = async (question: string, phase: "morning" | "midday") => {
-    toast.error("AI follow-up has been disabled");
+    setIsGenerating(true);
+    
+    try {
+      // Get current conversation history
+      const currentConversation = phase === "morning" 
+        ? dailyLog.morning_follow_up || []
+        : dailyLog.midday_follow_up || [];
+      
+      // Get the insight for context
+      const insight = phase === "morning" 
+        ? dailyLog.morning_insight 
+        : dailyLog.midday_insight;
+      
+      if (!insight) {
+        toast.error("No insight available for this phase");
+        setIsGenerating(false);
+        return;
+      }
+      
+      // Add user message to conversation
+      const updatedConversation = [
+        ...currentConversation,
+        { role: "user" as const, text: question }
+      ];
+      
+      // Update UI immediately with user's question
+      const fieldToUpdate = phase === "morning" ? "morning_follow_up" : "midday_follow_up";
+      await updateLog({ [fieldToUpdate]: updatedConversation });
+      
+      // Call edge function
+      const { data, error } = await supabase.functions.invoke('chat-with-insight', {
+        body: {
+          phase,
+          question,
+          insight,
+          conversationHistory: currentConversation,
+          userContext: {
+            situation: dailyLog.situation,
+            challenges: challenges.filter(c => c.is_active).map(c => c.name),
+            wisdomSources: wisdomEntries.filter(w => w.is_active).map(w => w.name)
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Add AI response to conversation
+      const finalConversation = [
+        ...updatedConversation,
+        { role: "assistant" as const, text: data.response }
+      ];
+      
+      await updateLog({ [fieldToUpdate]: finalConversation });
+      
+    } catch (error: any) {
+      console.error("Error in follow-up:", error);
+      toast.error("Failed to get AI response. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const markPhaseComplete = (phase: "morning" | "midday" | "evening") => {
