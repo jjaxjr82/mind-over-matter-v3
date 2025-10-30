@@ -4,6 +4,7 @@ import { externalClient } from "@/integrations/supabase/externalClient";
 import { dualInsert, dualUpdate, dualDelete } from "@/integrations/supabase/dualWrite";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import {
   Sun,
   Sunset,
@@ -17,17 +18,23 @@ import {
   ChevronsRight,
   AlertTriangle,
   Target,
-  Calendar,
+  Calendar as CalendarIcon,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import InsightCard from "@/components/InsightCard";
 import ChallengesModal from "@/components/ChallengesModal";
 import WisdomLibraryModal from "@/components/WisdomLibraryModal";
 import FollowUpChat from "@/components/FollowUpChat";
 import DailyScheduleCard from "@/components/DailyScheduleCard";
+import { WeeklyTracker } from "@/components/WeeklyTracker";
 import { WORK_MODES, ENERGY_LEVELS } from "@/hooks/useScheduleManager";
 
 interface Challenge {
@@ -149,6 +156,7 @@ const Index = () => {
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [situationText, setSituationText] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Today's schedule settings (from schedule, not stored in daily_logs)
@@ -330,18 +338,32 @@ const Index = () => {
           };
         });
         setWeeklyLogs(weekLogsMap);
+      } catch (error: any) {
+        console.error("Error loading data:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-        // Load today's log
-        const today = new Date().toISOString().split("T")[0];
-        const todayDate = new Date();
-        const todayDayName = DAYS[todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1];
-        const todaySchedule = loadedWeekSchedule[todayDayName];
+    loadData();
+  }, [user, authChecked, loadFocusAreas]);
+
+  // Load daily log when selected date changes
+  useEffect(() => {
+    if (!user || !authChecked) return;
+
+    const loadDailyLog = async () => {
+      try {
+        const dateStr = selectedDate.toISOString().split("T")[0];
+        const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+        const daySchedule = weekSchedule[dayName];
 
         const { data: logData, error: logError } = await externalClient
           .from("daily_logs")
           .select("*")
           .eq("user_id", user.id)
-          .eq("date", today)
+          .eq("date", dateStr)
           .maybeSingle();
 
         if (logError) throw logError;
@@ -355,15 +377,20 @@ const Index = () => {
           setDailyLog(log);
           setSituationText(log.situation || "");
           
-          // Set today's schedule settings
-          if (todaySchedule) {
-            setTodayWorkMode(todaySchedule.work_mode);
-            setTodayFocusAreas(todaySchedule.focus_areas);
+          // Set schedule settings for this day
+          if (daySchedule) {
+            setTodayWorkMode(daySchedule.work_mode);
+            setTodayFocusAreas(daySchedule.focus_areas);
           }
+          
+          // Set phase completion based on log
+          setMorningCompleted(!!logData.morning_complete);
+          setMiddayCompleted(!!logData.midday_complete);
+          setEveningCompleted(!!logData.evening_complete);
         } else {
-          // Create new log for today
+          // Create new log for this date
           const newLog = {
-            date: today,
+            date: dateStr,
             situation: "",
             morning_insight: null,
             morning_follow_up: [],
@@ -386,22 +413,25 @@ const Index = () => {
           setDailyLog(log);
           setSituationText(log.situation || "");
           
-          // Set today's schedule settings
-          if (todaySchedule) {
-            setTodayWorkMode(todaySchedule.work_mode);
-            setTodayFocusAreas(todaySchedule.focus_areas);
+          // Set schedule settings for this day
+          if (daySchedule) {
+            setTodayWorkMode(daySchedule.work_mode);
+            setTodayFocusAreas(daySchedule.focus_areas);
           }
+          
+          // Reset phase completion for new log
+          setMorningCompleted(false);
+          setMiddayCompleted(false);
+          setEveningCompleted(false);
         }
       } catch (error: any) {
-        console.error("Error loading data:", error);
-        toast.error("Failed to load data");
-      } finally {
-        setIsLoading(false);
+        console.error("Error loading daily log:", error);
+        toast.error("Failed to load daily log");
       }
     };
 
-    loadData();
-  }, [user, authChecked, loadFocusAreas]);
+    loadDailyLog();
+  }, [selectedDate, user, authChecked, weekSchedule]);
 
   const updateLog = useCallback(
     async (updates: Partial<DailyLog>) => {
@@ -1341,6 +1371,68 @@ const Index = () => {
             </div>
             
             {/* Navigation Bar */}
+            <div className="flex items-center justify-between gap-4 mb-4">
+              {/* Date Navigation */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(newDate.getDate() - 1);
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[240px] justify-start text-left font-bold",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(newDate.getDate() + 1);
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDate(new Date())}
+                  className="font-bold"
+                >
+                  Today
+                </Button>
+              </div>
+            </div>
+            
             <nav className="bg-muted/50 rounded-lg p-2 flex items-center justify-center gap-2">
               <Button
                 variant="ghost"
@@ -1371,11 +1463,20 @@ const Index = () => {
                 onClick={() => navigate("/schedule")}
                 className="h-10 px-3"
               >
-                <Calendar className="h-4 w-4 mr-2" />
+                <CalendarIcon className="h-4 w-4 mr-2" />
                 <span className="text-sm font-bold">Schedule</span>
               </Button>
             </nav>
           </header>
+
+          {/* Weekly Progress Tracker */}
+          <div className="mb-6">
+            <WeeklyTracker 
+              weeklyLogs={weeklyLogs}
+              selectedDate={selectedDate}
+              onDateSelect={setSelectedDate}
+            />
+          </div>
 
           <div className="w-full max-w-3xl mx-auto bg-card border border-border rounded-lg p-6 mb-24">
             <div className="space-y-4">{renderPhase()}</div>
