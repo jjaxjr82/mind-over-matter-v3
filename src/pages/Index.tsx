@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import {
   Sun,
+  Sunrise,
   Sunset,
   Moon,
   Lock,
@@ -36,9 +37,7 @@ import WisdomLibraryModal from "@/components/WisdomLibraryModal";
 import FollowUpChat from "@/components/FollowUpChat";
 import DailyScheduleCard from "@/components/DailyScheduleCard";
 import { WeeklyTracker } from "@/components/WeeklyTracker";
-import { MorningStatusCard } from "@/components/MorningStatusCard";
-import { MiddayStatusCard } from "@/components/MiddayStatusCard";
-import { EveningStatusCard } from "@/components/EveningStatusCard";
+import { PhaseStatusCard } from "@/components/PhaseStatusCard";
 import { MorningQuickReference } from "@/components/MorningQuickReference";
 import { WORK_MODES, ENERGY_LEVELS } from "@/hooks/useScheduleManager";
 
@@ -1264,20 +1263,61 @@ const Index = () => {
       if (hour < 12) {
         return (
           <div className="space-y-4">
-            {/* Morning Status Card */}
-            <MorningStatusCard
-              onReopen={() => reopenPhase("morning")}
-              onRegenerate={() => generateDailyInsight("morning")}
-              onReset={resetMorning}
-              isRegenerating={isGenerating}
+            <PhaseStatusCard
+              phase="morning"
+              title="Morning Insight"
+              icon={<Sunrise className="h-6 w-6 text-orange-500" />}
+              preview={{
+                primary: dailyLog.morning_insight?.theme || "Your morning theme",
+                secondary: dailyLog.morning_insight?.mantra?.slice(0, 100) + (dailyLog.morning_insight?.mantra?.length > 100 ? "..." : "")
+              }}
+              details={
+                <div className="space-y-4">
+                  {dailyLog.morning_insight?.quote && (
+                    <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
+                      <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                    </div>
+                  )}
+                  {dailyLog.morning_insight?.analysis && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Analysis</h4>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.morning_insight.analysis}</p>
+                    </div>
+                  )}
+                  {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                      <div className="space-y-3">
+                        {dailyLog.morning_follow_up.map((msg: any, idx: number) => (
+                          <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                            <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                              {msg.role === 'user' ? 'You' : 'Coach'}
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              }
+              actions={{
+                onReopen: () => reopenPhase("morning"),
+                onRegenerate: () => generateDailyInsight("morning"),
+                onReset: resetMorning,
+                isRegenerating: isGenerating
+              }}
             />
 
-            {/* Quick Reference - Always Visible */}
-            <MorningQuickReference
-              insight={dailyLog.morning_insight}
-              checkedItems={completedActionItems.morning}
-              onCheckItem={(index) => handleCheckActionItem("morning", index)}
-            />
+            <div className="border-l-4 border-primary pl-4">
+              <h3 className="font-black uppercase text-sm mb-2">📋 Today's Action Plan</h3>
+              <p className="text-xs text-muted-foreground mb-3">From your morning insight</p>
+              <MorningQuickReference
+                insight={dailyLog.morning_insight}
+                checkedItems={completedActionItems.morning}
+                onCheckItem={(index) => handleCheckActionItem("morning", index)}
+              />
+            </div>
             
             <div className="p-6 bg-secondary border border-border rounded-lg text-center space-y-4">
               <div>
@@ -1292,20 +1332,61 @@ const Index = () => {
 
       return (
         <div className="space-y-4">
-          {/* Morning Status Card */}
-          <MorningStatusCard
-            onReopen={() => reopenPhase("morning")}
-            onRegenerate={() => generateDailyInsight("morning")}
-            onReset={resetMorning}
-            isRegenerating={isGenerating}
+          <PhaseStatusCard
+            phase="morning"
+            title="Morning Insight"
+            icon={<Sunrise className="h-6 w-6 text-orange-500" />}
+            preview={{
+              primary: dailyLog.morning_insight?.theme || "Your morning theme",
+              secondary: dailyLog.morning_insight?.mantra?.slice(0, 100) + (dailyLog.morning_insight?.mantra?.length > 100 ? "..." : "")
+            }}
+            details={
+              <div className="space-y-4">
+                {dailyLog.morning_insight?.quote && (
+                  <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
+                    <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                  </div>
+                )}
+                {dailyLog.morning_insight?.analysis && (
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Analysis</h4>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.morning_insight.analysis}</p>
+                  </div>
+                )}
+                {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                    <div className="space-y-3">
+                      {dailyLog.morning_follow_up.map((msg: any, idx: number) => (
+                        <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                          <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                            {msg.role === 'user' ? 'You' : 'Coach'}
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            }
+            actions={{
+              onReopen: () => reopenPhase("morning"),
+              onRegenerate: () => generateDailyInsight("morning"),
+              onReset: resetMorning,
+              isRegenerating: isGenerating
+            }}
           />
 
-          {/* Quick Reference - Always Visible */}
-          <MorningQuickReference
-            insight={dailyLog.morning_insight}
-            checkedItems={completedActionItems.morning}
-            onCheckItem={(index) => handleCheckActionItem("morning", index)}
-          />
+          <div className="border-l-4 border-primary pl-4">
+            <h3 className="font-black uppercase text-sm mb-2">📋 Today's Action Plan</h3>
+            <p className="text-xs text-muted-foreground mb-3">From your morning insight</p>
+            <MorningQuickReference
+              insight={dailyLog.morning_insight}
+              checkedItems={completedActionItems.morning}
+              onCheckItem={(index) => handleCheckActionItem("morning", index)}
+            />
+          </div>
           
           <div className="border-l-4 border-primary pl-4 mb-4">
             <div className="flex items-center gap-2">
@@ -1359,27 +1440,107 @@ const Index = () => {
       if (hour < 19) {
         return (
           <div className="space-y-4">
-            <MiddayStatusCard
-              insight={dailyLog.midday_insight}
-              adjustment={dailyLog.midday_adjustment}
-              followUp={dailyLog.midday_follow_up}
-              onReopen={() => reopenPhase("midday")}
-              onRegenerate={() => generateDailyInsight("midday")}
-              isRegenerating={isGenerating}
+            <PhaseStatusCard
+              phase="midday"
+              title="Midday Check-In"
+              icon={<Sun className="h-6 w-6 text-blue-500" />}
+              preview={{
+                primary: dailyLog.midday_adjustment?.slice(0, 150) + (dailyLog.midday_adjustment?.length > 150 ? "..." : ""),
+                secondary: dailyLog.midday_insight?.analysis?.slice(0, 100) + (dailyLog.midday_insight?.analysis?.length > 100 ? "..." : "")
+              }}
+              details={
+                <div className="space-y-4">
+                  {dailyLog.midday_adjustment && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Your Adjustment</h4>
+                      <p className="text-sm whitespace-pre-wrap">{dailyLog.midday_adjustment}</p>
+                    </div>
+                  )}
+                  {dailyLog.midday_insight && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Coach's Response</h4>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.midday_insight.analysis}</p>
+                    </div>
+                  )}
+                  {dailyLog.midday_follow_up && dailyLog.midday_follow_up.length > 0 && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                      <div className="space-y-3">
+                        {dailyLog.midday_follow_up.map((msg: any, idx: number) => (
+                          <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                            <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                              {msg.role === 'user' ? 'You' : 'Coach'}
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              }
+              actions={{
+                onReopen: () => reopenPhase("midday"),
+                onRegenerate: () => generateDailyInsight("midday"),
+                isRegenerating: isGenerating
+              }}
             />
             
-            <MorningStatusCard
-              onReopen={() => reopenPhase("morning")}
-              onRegenerate={() => generateDailyInsight("morning")}
-              onReset={resetMorning}
-              isRegenerating={isGenerating}
+            <PhaseStatusCard
+              phase="morning"
+              title="Morning Insight"
+              icon={<Sunrise className="h-6 w-6 text-orange-500" />}
+              preview={{
+                primary: dailyLog.morning_insight?.theme || "Your morning theme",
+                secondary: dailyLog.morning_insight?.mantra?.slice(0, 100) + (dailyLog.morning_insight?.mantra?.length > 100 ? "..." : "")
+              }}
+              details={
+                <div className="space-y-4">
+                  {dailyLog.morning_insight?.quote && (
+                    <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
+                      <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                    </div>
+                  )}
+                  {dailyLog.morning_insight?.analysis && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Analysis</h4>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.morning_insight.analysis}</p>
+                    </div>
+                  )}
+                  {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                      <div className="space-y-3">
+                        {dailyLog.morning_follow_up.map((msg: any, idx: number) => (
+                          <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                            <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                              {msg.role === 'user' ? 'You' : 'Coach'}
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              }
+              actions={{
+                onReopen: () => reopenPhase("morning"),
+                onRegenerate: () => generateDailyInsight("morning"),
+                onReset: resetMorning,
+                isRegenerating: isGenerating
+              }}
             />
             
-            <MorningQuickReference
-              insight={dailyLog.morning_insight}
-              checkedItems={completedActionItems.morning}
-              onCheckItem={(index) => handleCheckActionItem("morning", index)}
-            />
+            <div className="border-l-4 border-primary pl-4">
+              <h3 className="font-black uppercase text-sm mb-2">📋 Today's Action Plan</h3>
+              <p className="text-xs text-muted-foreground mb-3">From your morning insight</p>
+              <MorningQuickReference
+                insight={dailyLog.morning_insight}
+                checkedItems={completedActionItems.morning}
+                onCheckItem={(index) => handleCheckActionItem("morning", index)}
+              />
+            </div>
             
             <div className="p-6 bg-secondary border border-border rounded-lg text-center space-y-4">
               <div>
@@ -1394,27 +1555,107 @@ const Index = () => {
 
       return (
         <div className="space-y-4">
-          <MiddayStatusCard
-            insight={dailyLog.midday_insight}
-            adjustment={dailyLog.midday_adjustment}
-            followUp={dailyLog.midday_follow_up}
-            onReopen={() => reopenPhase("midday")}
-            onRegenerate={() => generateDailyInsight("midday")}
-            isRegenerating={isGenerating}
+          <PhaseStatusCard
+            phase="midday"
+            title="Midday Check-In"
+            icon={<Sun className="h-6 w-6 text-blue-500" />}
+            preview={{
+              primary: dailyLog.midday_adjustment?.slice(0, 150) + (dailyLog.midday_adjustment?.length > 150 ? "..." : ""),
+              secondary: dailyLog.midday_insight?.analysis?.slice(0, 100) + (dailyLog.midday_insight?.analysis?.length > 100 ? "..." : "")
+            }}
+            details={
+              <div className="space-y-4">
+                {dailyLog.midday_adjustment && (
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Your Adjustment</h4>
+                    <p className="text-sm whitespace-pre-wrap">{dailyLog.midday_adjustment}</p>
+                  </div>
+                )}
+                {dailyLog.midday_insight && (
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Coach's Response</h4>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.midday_insight.analysis}</p>
+                  </div>
+                )}
+                {dailyLog.midday_follow_up && dailyLog.midday_follow_up.length > 0 && (
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                    <div className="space-y-3">
+                      {dailyLog.midday_follow_up.map((msg: any, idx: number) => (
+                        <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                          <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                            {msg.role === 'user' ? 'You' : 'Coach'}
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            }
+            actions={{
+              onReopen: () => reopenPhase("midday"),
+              onRegenerate: () => generateDailyInsight("midday"),
+              isRegenerating: isGenerating
+            }}
           />
           
-          <MorningStatusCard
-            onReopen={() => reopenPhase("morning")}
-            onRegenerate={() => generateDailyInsight("morning")}
-            onReset={resetMorning}
-            isRegenerating={isGenerating}
+          <PhaseStatusCard
+            phase="morning"
+            title="Morning Insight"
+            icon={<Sunrise className="h-6 w-6 text-orange-500" />}
+            preview={{
+              primary: dailyLog.morning_insight?.theme || "Your morning theme",
+              secondary: dailyLog.morning_insight?.mantra?.slice(0, 100) + (dailyLog.morning_insight?.mantra?.length > 100 ? "..." : "")
+            }}
+            details={
+              <div className="space-y-4">
+                {dailyLog.morning_insight?.quote && (
+                  <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
+                    <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                  </div>
+                )}
+                {dailyLog.morning_insight?.analysis && (
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Analysis</h4>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.morning_insight.analysis}</p>
+                  </div>
+                )}
+                {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                    <div className="space-y-3">
+                      {dailyLog.morning_follow_up.map((msg: any, idx: number) => (
+                        <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                          <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                            {msg.role === 'user' ? 'You' : 'Coach'}
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            }
+            actions={{
+              onReopen: () => reopenPhase("morning"),
+              onRegenerate: () => generateDailyInsight("morning"),
+              onReset: resetMorning,
+              isRegenerating: isGenerating
+            }}
           />
           
-          <MorningQuickReference
-            insight={dailyLog.morning_insight}
-            checkedItems={completedActionItems.morning}
-            onCheckItem={(index) => handleCheckActionItem("morning", index)}
-          />
+          <div className="border-l-4 border-primary pl-4">
+            <h3 className="font-black uppercase text-sm mb-2">📋 Today's Action Plan</h3>
+            <p className="text-xs text-muted-foreground mb-3">From your morning insight</p>
+            <MorningQuickReference
+              insight={dailyLog.morning_insight}
+              checkedItems={completedActionItems.morning}
+              onCheckItem={(index) => handleCheckActionItem("morning", index)}
+            />
+          </div>
           
           <div className="border-l-4 border-primary pl-4 mb-4">
             <div className="flex items-center gap-2">
@@ -1477,34 +1718,142 @@ const Index = () => {
 
     return (
       <div className="space-y-4">
-        <EveningStatusCard
-          win={dailyLog.win}
-          weakness={dailyLog.weakness}
-          tomorrowsPrep={dailyLog.tomorrows_prep}
-          onReopen={() => reopenPhase("evening")}
+        <PhaseStatusCard
+          phase="evening"
+          title="Evening Reflection"
+          icon={<Moon className="h-6 w-6 text-purple-500" />}
+          preview={{
+            primary: dailyLog.win?.slice(0, 150) + (dailyLog.win?.length > 150 ? "..." : ""),
+            secondary: dailyLog.weakness?.slice(0, 100) + (dailyLog.weakness?.length > 100 ? "..." : "")
+          }}
+          details={
+            <div className="space-y-4">
+              {dailyLog.win && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2 text-green-600 dark:text-green-400">Today's Win</h4>
+                  <p className="text-sm whitespace-pre-wrap">{dailyLog.win}</p>
+                </div>
+              )}
+              {dailyLog.weakness && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2 text-orange-600 dark:text-orange-400">What Needed Work</h4>
+                  <p className="text-sm whitespace-pre-wrap">{dailyLog.weakness}</p>
+                </div>
+              )}
+              {dailyLog.tomorrows_prep && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Tomorrow's Prep</h4>
+                  <p className="text-sm whitespace-pre-wrap">{dailyLog.tomorrows_prep}</p>
+                </div>
+              )}
+            </div>
+          }
+          actions={{
+            onReopen: () => reopenPhase("evening")
+          }}
         />
         
-        <MiddayStatusCard
-          insight={dailyLog.midday_insight}
-          adjustment={dailyLog.midday_adjustment}
-          followUp={dailyLog.midday_follow_up}
-          onReopen={() => reopenPhase("midday")}
-          onRegenerate={() => generateDailyInsight("midday")}
-          isRegenerating={isGenerating}
+        <PhaseStatusCard
+          phase="midday"
+          title="Midday Check-In"
+          icon={<Sun className="h-6 w-6 text-blue-500" />}
+          preview={{
+            primary: dailyLog.midday_adjustment?.slice(0, 150) + (dailyLog.midday_adjustment?.length > 150 ? "..." : ""),
+            secondary: dailyLog.midday_insight?.analysis?.slice(0, 100) + (dailyLog.midday_insight?.analysis?.length > 100 ? "..." : "")
+          }}
+          details={
+            <div className="space-y-4">
+              {dailyLog.midday_adjustment && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Your Adjustment</h4>
+                  <p className="text-sm whitespace-pre-wrap">{dailyLog.midday_adjustment}</p>
+                </div>
+              )}
+              {dailyLog.midday_insight && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Coach's Response</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.midday_insight.analysis}</p>
+                </div>
+              )}
+              {dailyLog.midday_follow_up && dailyLog.midday_follow_up.length > 0 && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                  <div className="space-y-3">
+                    {dailyLog.midday_follow_up.map((msg: any, idx: number) => (
+                      <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                        <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                          {msg.role === 'user' ? 'You' : 'Coach'}
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          }
+          actions={{
+            onReopen: () => reopenPhase("midday"),
+            onRegenerate: () => generateDailyInsight("midday"),
+            isRegenerating: isGenerating
+          }}
         />
         
-        <MorningStatusCard
-          onReopen={() => reopenPhase("morning")}
-          onRegenerate={() => generateDailyInsight("morning")}
-          onReset={resetMorning}
-          isRegenerating={isGenerating}
+        <PhaseStatusCard
+          phase="morning"
+          title="Morning Insight"
+          icon={<Sunrise className="h-6 w-6 text-orange-500" />}
+          preview={{
+            primary: dailyLog.morning_insight?.theme || "Your morning theme",
+            secondary: dailyLog.morning_insight?.mantra?.slice(0, 100) + (dailyLog.morning_insight?.mantra?.length > 100 ? "..." : "")
+          }}
+          details={
+            <div className="space-y-4">
+              {dailyLog.morning_insight?.quote && (
+                <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
+                  <p className="text-sm italic">"{dailyLog.morning_insight.quote}"</p>
+                </div>
+              )}
+              {dailyLog.morning_insight?.analysis && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Analysis</h4>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.morning_insight.analysis}</p>
+                </div>
+              )}
+              {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                  <div className="space-y-3">
+                    {dailyLog.morning_follow_up.map((msg: any, idx: number) => (
+                      <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                        <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                          {msg.role === 'user' ? 'You' : 'Coach'}
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          }
+          actions={{
+            onReopen: () => reopenPhase("morning"),
+            onRegenerate: () => generateDailyInsight("morning"),
+            onReset: resetMorning,
+            isRegenerating: isGenerating
+          }}
         />
         
-        <MorningQuickReference
-          insight={dailyLog.morning_insight}
-          checkedItems={completedActionItems.morning}
-          onCheckItem={(index) => handleCheckActionItem("morning", index)}
-        />
+        <div className="border-l-4 border-primary pl-4">
+          <h3 className="font-black uppercase text-sm mb-2">📋 Today's Action Plan</h3>
+          <p className="text-xs text-muted-foreground mb-3">From your morning insight</p>
+          <MorningQuickReference
+            insight={dailyLog.morning_insight}
+            checkedItems={completedActionItems.morning}
+            onCheckItem={(index) => handleCheckActionItem("morning", index)}
+          />
+        </div>
         
         <div className="p-8 bg-secondary border border-primary rounded-lg text-center space-y-6">
           <div>
