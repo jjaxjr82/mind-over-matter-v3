@@ -10,29 +10,29 @@ interface MorningStatusCardProps {
 
 export const MorningStatusCard = ({ onReopen, onRegenerate, isRegenerating }: MorningStatusCardProps) => {
   return (
-    <Card className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
+    <Card className="bg-muted/50 border-2">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            <span className="font-bold text-emerald-900 dark:text-emerald-100">Morning Complete</span>
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-6 w-6 text-primary" />
+            <span className="font-black uppercase tracking-wide text-sm">Morning Complete</span>
           </div>
           <div className="flex gap-2">
             <Button
               onClick={onReopen}
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="h-8 text-xs"
+              className="h-9 text-xs font-bold uppercase tracking-wider"
             >
               <Unlock className="h-3 w-3 mr-1" />
               Reopen
             </Button>
             <Button
               onClick={onRegenerate}
-              variant="outline"
+              variant="default"
               size="sm"
               disabled={isRegenerating}
-              className="h-8 text-xs"
+              className="h-9 text-xs font-bold uppercase tracking-wider"
             >
               {isRegenerating ? (
                 <>
