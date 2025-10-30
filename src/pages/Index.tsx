@@ -906,15 +906,50 @@ const Index = () => {
     if (!middayCompleted) {
       if (hour < 12) {
         return (
-          <div className="p-6 bg-secondary border border-border rounded-lg text-center space-y-4">
-            <div>
-              <Lock className="mx-auto h-8 w-8 mb-3" />
-              <h3 className="text-lg font-black text-foreground uppercase tracking-wider">Morning Complete</h3>
-              <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Midday unlocks at 12:00 PM</p>
+          <div className="space-y-4">
+            {/* Collapsed Morning Insight - Always Visible After Completion */}
+            {dailyLog.morning_insight && (
+              <div className="bg-card border-2 border-primary/20 rounded-lg p-4">
+                <details className="group">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sun className="h-4 w-4 text-primary" />
+                        <span className="font-black text-sm uppercase tracking-wider">Morning Insight</span>
+                      </div>
+                      <ChevronsRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 font-bold">
+                      {dailyLog.morning_insight.quote?.text || "Click to view"}
+                    </p>
+                  </summary>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <InsightCard insight={dailyLog.morning_insight} />
+                    {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-xs font-black uppercase tracking-wider mb-2">Follow-up Conversation</h4>
+                        <FollowUpChat
+                          conversation={dailyLog.morning_follow_up}
+                          onFollowUp={(q) => handleFollowUp(q, "morning")}
+                          isLoading={isGenerating}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </details>
+              </div>
+            )}
+            
+            <div className="p-6 bg-secondary border border-border rounded-lg text-center space-y-4">
+              <div>
+                <Lock className="mx-auto h-8 w-8 mb-3" />
+                <h3 className="text-lg font-black text-foreground uppercase tracking-wider">Morning Complete</h3>
+                <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Midday unlocks at 12:00 PM</p>
+              </div>
+              <Button onClick={() => reopenPhase("morning")} variant="outline" size="sm">
+                Reopen Morning
+              </Button>
             </div>
-            <Button onClick={() => reopenPhase("morning")} variant="outline" size="sm">
-              Reopen Morning
-            </Button>
           </div>
         );
       }
@@ -942,15 +977,50 @@ const Index = () => {
     if (!eveningCompleted) {
       if (hour < 19) {
         return (
-          <div className="p-6 bg-secondary border border-border rounded-lg text-center space-y-4">
-            <div>
-              <Lock className="mx-auto h-8 w-8 mb-3" />
-              <h3 className="text-lg font-black text-foreground uppercase tracking-wider">Midday Complete</h3>
-              <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Evening unlocks at 7:00 PM</p>
+          <div className="space-y-4">
+            {/* Collapsed Morning Insight */}
+            {dailyLog.morning_insight && (
+              <div className="bg-card border-2 border-primary/20 rounded-lg p-4">
+                <details className="group">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sun className="h-4 w-4 text-primary" />
+                        <span className="font-black text-sm uppercase tracking-wider">Morning Insight</span>
+                      </div>
+                      <ChevronsRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 font-bold">
+                      {dailyLog.morning_insight.quote?.text || "Click to view"}
+                    </p>
+                  </summary>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <InsightCard insight={dailyLog.morning_insight} />
+                    {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-xs font-black uppercase tracking-wider mb-2">Follow-up Conversation</h4>
+                        <FollowUpChat
+                          conversation={dailyLog.morning_follow_up}
+                          onFollowUp={(q) => handleFollowUp(q, "morning")}
+                          isLoading={isGenerating}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </details>
+              </div>
+            )}
+            
+            <div className="p-6 bg-secondary border border-border rounded-lg text-center space-y-4">
+              <div>
+                <Lock className="mx-auto h-8 w-8 mb-3" />
+                <h3 className="text-lg font-black text-foreground uppercase tracking-wider">Midday Complete</h3>
+                <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Evening unlocks at 7:00 PM</p>
+              </div>
+              <Button onClick={() => reopenPhase("midday")} variant="outline" size="sm">
+                Reopen Midday
+              </Button>
             </div>
-            <Button onClick={() => reopenPhase("midday")} variant="outline" size="sm">
-              Reopen Midday
-            </Button>
           </div>
         );
       }
@@ -1017,15 +1087,50 @@ const Index = () => {
     }
 
     return (
-      <div className="p-8 bg-secondary border border-primary rounded-lg text-center space-y-6">
-        <div>
-          <BrainCircuit className="mx-auto h-12 w-12 mb-3" />
-          <h3 className="text-2xl font-black text-foreground uppercase tracking-wider">Day Won.</h3>
-          <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Recover. Return Tomorrow.</p>
+      <div className="space-y-4">
+        {/* Collapsed Morning Insight */}
+        {dailyLog.morning_insight && (
+          <div className="bg-card border-2 border-primary/20 rounded-lg p-4">
+            <details className="group">
+              <summary className="cursor-pointer list-none">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sun className="h-4 w-4 text-primary" />
+                    <span className="font-black text-sm uppercase tracking-wider">Morning Insight</span>
+                  </div>
+                  <ChevronsRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 font-bold">
+                  {dailyLog.morning_insight.quote?.text || "Click to view"}
+                </p>
+              </summary>
+              <div className="mt-4 pt-4 border-t border-border">
+                <InsightCard insight={dailyLog.morning_insight} />
+                {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-xs font-black uppercase tracking-wider mb-2">Follow-up Conversation</h4>
+                    <FollowUpChat
+                      conversation={dailyLog.morning_follow_up}
+                      onFollowUp={(q) => handleFollowUp(q, "morning")}
+                      isLoading={isGenerating}
+                    />
+                  </div>
+                )}
+              </div>
+            </details>
+          </div>
+        )}
+        
+        <div className="p-8 bg-secondary border border-primary rounded-lg text-center space-y-6">
+          <div>
+            <BrainCircuit className="mx-auto h-12 w-12 mb-3" />
+            <h3 className="text-2xl font-black text-foreground uppercase tracking-wider">Day Won.</h3>
+            <p className="text-muted-foreground mt-2 font-bold uppercase text-xs">Recover. Return Tomorrow.</p>
+          </div>
+          <Button onClick={() => reopenPhase("evening")} variant="outline" size="sm">
+            Reopen Evening
+          </Button>
         </div>
-        <Button onClick={() => reopenPhase("evening")} variant="outline" size="sm">
-          Reopen Evening
-        </Button>
       </div>
     );
   };
