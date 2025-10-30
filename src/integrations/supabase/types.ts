@@ -46,6 +46,7 @@ export type Database = {
       }
       daily_logs: {
         Row: {
+          completed_action_items: Json | null
           created_at: string
           date: string
           energy_level: string | null
@@ -67,6 +68,7 @@ export type Database = {
           work_mode: string | null
         }
         Insert: {
+          completed_action_items?: Json | null
           created_at?: string
           date: string
           energy_level?: string | null
@@ -88,6 +90,7 @@ export type Database = {
           work_mode?: string | null
         }
         Update: {
+          completed_action_items?: Json | null
           created_at?: string
           date?: string
           energy_level?: string | null
