@@ -174,6 +174,9 @@ const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [situationText, setSituationText] = useState("");
   const [middayAdjustmentText, setMiddayAdjustmentText] = useState("");
+  const [winText, setWinText] = useState("");
+  const [weaknessText, setWeaknessText] = useState("");
+  const [tomorrowsPrepText, setTomorrowsPrepText] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -425,6 +428,9 @@ const Index = () => {
           setDailyLog(log);
           setSituationText(log.situation || "");
           setMiddayAdjustmentText(log.midday_adjustment || "");
+          setWinText(log.win || "");
+          setWeaknessText(log.weakness || "");
+          setTomorrowsPrepText(log.tomorrows_prep || "");
           
           // Load completed action items
           const completedItems = (logData.completed_action_items as any) || {};
@@ -1312,16 +1318,40 @@ const Index = () => {
     }
   };
 
-  const handleWinChange = async (value: string) => {
-    await updateLog({ win: value });
+  const handleWinChange = (value: string) => {
+    setWinText(value);
+    setDailyLog(prev => prev ? { ...prev, win: value } : prev);
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      updateLog({ win: value });
+    }, 500);
   };
 
-  const handleWeaknessChange = async (value: string) => {
-    await updateLog({ weakness: value });
+  const handleWeaknessChange = (value: string) => {
+    setWeaknessText(value);
+    setDailyLog(prev => prev ? { ...prev, weakness: value } : prev);
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      updateLog({ weakness: value });
+    }, 500);
   };
 
-  const handleTomorrowsPrepChange = async (value: string) => {
-    await updateLog({ tomorrows_prep: value });
+  const handleTomorrowsPrepChange = (value: string) => {
+    setTomorrowsPrepText(value);
+    setDailyLog(prev => prev ? { ...prev, tomorrows_prep: value } : prev);
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      updateLog({ tomorrows_prep: value });
+    }, 500);
   };
 
   const renderMorningDetails = () => {
@@ -1701,7 +1731,7 @@ const Index = () => {
                       <Textarea
                         rows={3}
                         placeholder="WHAT WENT WELL TODAY?"
-                        value={dailyLog.win || ""}
+                        value={winText}
                         onChange={(e) => handleWinChange(e.target.value)}
                       />
                     </div>
@@ -1713,7 +1743,7 @@ const Index = () => {
                       <Textarea
                         rows={3}
                         placeholder="WHERE CAN YOU IMPROVE?"
-                        value={dailyLog.weakness || ""}
+                        value={weaknessText}
                         onChange={(e) => handleWeaknessChange(e.target.value)}
                       />
                     </div>
@@ -1725,7 +1755,7 @@ const Index = () => {
                       <Textarea
                         rows={3}
                         placeholder="WHAT WILL MAKE TOMORROW BETTER?"
-                        value={dailyLog.tomorrows_prep || ""}
+                        value={tomorrowsPrepText}
                         onChange={(e) => handleTomorrowsPrepChange(e.target.value)}
                       />
                     </div>
