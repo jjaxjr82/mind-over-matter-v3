@@ -63,9 +63,10 @@ export const WeeklyTracker = ({ weeklyLogs, selectedDate, onDateSelect }: Weekly
     if (!log) return { completed: 0, total: 3, color: "text-muted-foreground" };
     
     let completed = 0;
-    if (log.morning_complete) completed++;
-    if (log.midday_complete) completed++;
-    if (log.evening_complete) completed++;
+    // Only count as complete if BOTH the flag is true AND the data exists
+    if (log.morning_complete && log.morning_insight) completed++;
+    if (log.midday_complete && log.midday_insight) completed++;
+    if (log.evening_complete && log.win) completed++; // Evening uses win/weakness/tomorrows_prep
 
     const total = 3;
     const percentage = (completed / total) * 100;
