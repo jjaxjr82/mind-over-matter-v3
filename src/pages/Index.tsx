@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { externalClient } from "@/integrations/supabase/externalClient";
 import { dualInsert, dualUpdate, dualDelete } from "@/integrations/supabase/dualWrite";
 import { supabase } from "@/integrations/supabase/client";
+import { parseScheduleFromExternalDB } from "@/utils/databaseSchemaAdapters";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -632,20 +633,31 @@ const Index = () => {
         return;
       }
       
+      console.log(`📊 Found ${scheduleData?.length || 0} schedules in external database`);
+      
       // Parse today's schedule from fresh data
       const todaySchedule = scheduleData?.find(d => d.day_of_week === today);
-      const tags = todaySchedule?.tags || [];
-      const freshWorkMode = tags.find((t: string) => WORK_MODES.includes(t as any)) || "WFH";
-      const freshEnergyLevel = tags.find((t: string) => ENERGY_LEVELS.includes(t as any)) || null;
-      const freshFocusAreas = tags.filter(
-        (t: string) => !WORK_MODES.includes(t as any) && !ENERGY_LEVELS.includes(t as any)
-      );
       
-      console.log('✅ Fresh schedule loaded:', { 
+      if (!todaySchedule) {
+        console.warn(`⚠️ No schedule found for ${today}, using defaults`);
+      }
+      
+      // External DB has work_mode as a separate column, NOT in tags
+      // Use parseScheduleFromExternalDB to correctly parse the schema
+      const parsed = todaySchedule 
+        ? parseScheduleFromExternalDB(todaySchedule)
+        : { work_mode: 'WFH', focus_areas: [] };
+      
+      const freshWorkMode = parsed.work_mode;
+      const freshEnergyLevel = null; // Energy level not stored in schedules table
+      const freshFocusAreas = parsed.focus_areas;
+      
+      console.log('✅ Fresh schedule loaded from EXTERNAL DB:', { 
         workMode: freshWorkMode, 
         energyLevel: freshEnergyLevel,
         focusAreas: freshFocusAreas,
-        description: todaySchedule?.description 
+        description: todaySchedule?.description,
+        rawData: todaySchedule
       });
       
       const activeChallenges = challenges
