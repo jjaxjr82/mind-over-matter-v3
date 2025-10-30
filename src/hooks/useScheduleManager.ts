@@ -63,7 +63,7 @@ export const useScheduleManager = () => {
       let loadedFocusAreas = [...DEFAULT_FOCUS_AREAS];
       
       try {
-        const { data: settingsData, error: settingsError } = await externalClient
+        const { data: settingsData, error: settingsError } = await (externalClient as any)
           .from('user_preferences')
           .select('setting_value')
           .eq('user_id', user.id)
@@ -178,7 +178,7 @@ export const useScheduleManager = () => {
       console.log('Adding focus area:', trimmed);
       
       // Check if preference exists
-      const { data: existing } = await externalClient
+      const { data: existing } = await (externalClient as any)
         .from('user_preferences')
         .select('id')
         .eq('user_id', user.id)
@@ -187,18 +187,20 @@ export const useScheduleManager = () => {
       
       if (existing) {
         // Update existing
-        const { error: updateError } = await dualUpdate('user_preferences',
-          { setting_value: { areas: updatedAreas } },
-          { column: 'id', value: existing.id }
-        );
+        const { error: updateError } = await (externalClient as any)
+          .from('user_preferences')
+          .update({ setting_value: { areas: updatedAreas } })
+          .eq('id', existing.id);
         if (updateError) throw updateError;
       } else {
         // Insert new
-        const { error: insertError } = await dualInsert('user_preferences', {
-          user_id: user.id,
-          setting_key: 'focus_areas',
-          setting_value: { areas: updatedAreas },
-        });
+        const { error: insertError } = await (externalClient as any)
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            setting_key: 'focus_areas',
+            setting_value: { areas: updatedAreas },
+          });
         if (insertError) throw insertError;
       }
       
@@ -233,7 +235,7 @@ export const useScheduleManager = () => {
     try {
       console.log('Removing focus area:', area);
       
-      const { data: existing } = await externalClient
+      const { data: existing } = await (externalClient as any)
         .from('user_preferences')
         .select('id')
         .eq('user_id', user.id)
@@ -241,10 +243,10 @@ export const useScheduleManager = () => {
         .maybeSingle();
       
       if (existing) {
-        const { error: updateError } = await dualUpdate('user_preferences',
-          { setting_value: { areas: updatedAreas } },
-          { column: 'id', value: existing.id }
-        );
+        const { error: updateError } = await (externalClient as any)
+          .from('user_preferences')
+          .update({ setting_value: { areas: updatedAreas } })
+          .eq('id', existing.id);
         
         if (updateError) throw updateError;
       }
