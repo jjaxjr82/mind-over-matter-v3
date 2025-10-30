@@ -15,6 +15,8 @@ interface InsightData {
   theAnchor?: string;
   carryThis?: string;
   deeperInsight?: string;
+  analysis?: string; // Evening insight field
+  tomorrowsFocus?: string; // Evening insight field
   recommendations?: Array<{
     type: 'article' | 'podcast';
     title: string;
@@ -133,6 +135,28 @@ const InsightCard = ({ insight }: InsightCardProps) => {
           </h3>
           <p className="text-foreground font-black leading-relaxed text-base text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 border-2 border-foreground italic">
             "{insight.carryThis}"
+          </p>
+        </div>
+      )}
+
+      {insight.analysis && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider">
+            📝 Evening Analysis
+          </h3>
+          <p className="text-foreground font-bold leading-relaxed text-sm whitespace-pre-wrap bg-secondary/30 p-3">
+            {insight.analysis}
+          </p>
+        </div>
+      )}
+
+      {insight.tomorrowsFocus && (
+        <div className="border-t-2 border-foreground pt-4">
+          <h3 className="font-black text-lg text-foreground mb-2 uppercase tracking-wider">
+            🌅 Tomorrow's Focus
+          </h3>
+          <p className="text-foreground font-bold leading-relaxed text-sm bg-primary/10 p-3 border-l-4 border-primary">
+            {insight.tomorrowsFocus}
           </p>
         </div>
       )}
