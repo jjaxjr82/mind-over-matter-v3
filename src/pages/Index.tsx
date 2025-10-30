@@ -51,6 +51,7 @@ interface DailyLog {
   situation: string;
   morning_insight: any;
   morning_follow_up: any[];
+  midday_insight?: any;
   midday_adjustment: string;
   midday_follow_up: any[];
   win: string;
@@ -499,7 +500,7 @@ const Index = () => {
     }
   };
 
-  const generateDailyInsight = async () => {
+  const generateDailyInsight = async (phase: "morning" | "midday" = "morning") => {
     setIsGenerating(true);
     try {
       const today = new Date().toLocaleString("en-us", { weekday: "long" });
@@ -513,7 +514,8 @@ const Index = () => {
         .map((w) => w.name)
         .join(", ");
 
-      console.log('🚀 Generating daily insight with context:', {
+      const requestBody: any = {
+        phase,
         challenges: activeChallenges || "None",
         wisdomSources: activeWisdomSources || "General wisdom",
         schedule: schedule[today] || "No schedule set",
@@ -521,24 +523,22 @@ const Index = () => {
         energyLevel: todayEnergyLevel,
         focusAreas: todayFocusAreas.join(", ") || "None",
         situation: dailyLog?.situation || "None",
-      });
+      };
+
+      if (phase === "midday") {
+        requestBody.morningInsight = dailyLog?.morning_insight;
+        requestBody.middayReflection = dailyLog?.midday_adjustment;
+      }
+
+      console.log(`🚀 Generating ${phase} insight with context:`, requestBody);
 
       const { data, error } = await supabase.functions.invoke("generate-daily-insight", {
-        body: {
-          challenges: activeChallenges || "None",
-          wisdomSources: activeWisdomSources || "General wisdom",
-          schedule: schedule[today] || "No schedule set",
-          workMode: todayWorkMode,
-          energyLevel: todayEnergyLevel,
-          focusAreas: todayFocusAreas.join(", ") || "None",
-          situation: dailyLog?.situation || "None",
-        },
+        body: requestBody,
       });
 
       if (error) {
         console.error("❌ Edge function error:", error);
         
-        // Handle specific error cases
         if (error.message?.includes('AI service not configured')) {
           toast.error("AI service not configured. Please contact support.");
         } else if (error.message?.includes('Rate limit')) {
@@ -560,8 +560,14 @@ const Index = () => {
       }
 
       console.log('✅ Insight generated successfully:', data);
-      await updateLog({ morning_insight: data, morning_follow_up: [] });
-      toast.success("Daily insight generated!");
+      
+      if (phase === "morning") {
+        await updateLog({ morning_insight: data, morning_follow_up: [] });
+      } else {
+        await updateLog({ midday_insight: data });
+      }
+      
+      toast.success(`${phase === "morning" ? "Daily" : "Midday"} insight generated!`);
     } catch (error: any) {
       console.error("❌ Unexpected error:", error);
       toast.error(error.message || "Failed to generate insight");
@@ -988,17 +994,75 @@ const Index = () => {
               </details>
             </div>
           )}
+
+          {/* Morning Summary */}
+          {dailyLog.morning_insight && (
+            <div className="bg-secondary/50 border-2 border-border rounded-lg p-4">
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Sun className="h-4 w-4" />
+                Morning Recap
+              </h3>
+              <div className="space-y-2 text-sm">
+                {dailyLog.morning_insight.quote && (
+                  <div>
+                    <span className="font-bold">Quote: </span>
+                    <span className="italic">"{dailyLog.morning_insight.quote.text}"</span>
+                  </div>
+                )}
+                {dailyLog.morning_insight.actionItems && dailyLog.morning_insight.actionItems.length > 0 && (
+                  <div>
+                    <span className="font-bold">Action Items: </span>
+                    <ul className="list-disc list-inside ml-2 mt-1">
+                      {dailyLog.morning_insight.actionItems.slice(0, 3).map((item: any, i: number) => (
+                        <li key={i} className="text-xs">{item.text || item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           <div className="border-l-4 border-primary pl-4 mb-4">
             <div className="flex items-center gap-2">
               <Sunset className="h-5 w-5" />
-              <h2 className="text-xl font-black">PHASE 2: HALFTIME ADJUSTMENT</h2>
+              <h2 className="text-2xl font-black uppercase tracking-wider">Halftime Adjustment</h2>
             </div>
+            <p className="text-sm text-muted-foreground font-bold">Check in. Adjust. Refocus.</p>
           </div>
 
-          <div className="p-4 bg-secondary border border-border rounded-lg">
-            <p className="text-center text-sm text-muted-foreground">Midday check-in</p>
-          </div>
+          <Textarea
+            placeholder="How's your day going? What's working? What needs adjustment? Share your thoughts..."
+            value={dailyLog.midday_adjustment || ''}
+            onChange={(e) => updateLog({ midday_adjustment: e.target.value })}
+            className="min-h-[150px]"
+          />
+
+          {!dailyLog.midday_insight && dailyLog.midday_adjustment && (
+            <Button 
+              onClick={() => generateDailyInsight("midday")}
+              disabled={isGenerating}
+              className="w-full"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader className="h-5 w-5 animate-spin mr-2" />
+                  Generating Midday Insight...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-5 w-5 mr-2" />
+                  Generate Midday Insight
+                </>
+              )}
+            </Button>
+          )}
+
+          {dailyLog.midday_insight && (
+            <div className="space-y-4">
+              <InsightCard insight={dailyLog.midday_insight} />
+            </div>
+          )}
 
           <Button onClick={() => markPhaseComplete("midday")} className="w-full" size="lg">
             Mark Complete
@@ -1319,7 +1383,7 @@ const Index = () => {
             {/* AI Insight Button */}
             <div className="mt-6 pt-6 border-t border-border">
               <Button 
-                onClick={generateDailyInsight} 
+                onClick={() => generateDailyInsight("morning")} 
                 disabled={isGenerating}
                 size="lg"
                 className="w-full"

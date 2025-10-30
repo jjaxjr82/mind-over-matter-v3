@@ -21,9 +21,12 @@ serve(async (req) => {
       );
     }
 
-    const { challenges, wisdomSources, schedule, workMode, energyLevel, focusAreas, situation } = await req.json();
+    const { phase = "morning", challenges, wisdomSources, schedule, workMode, energyLevel, focusAreas, situation, morningInsight, middayReflection } = await req.json();
 
-    const systemPrompt = `You are a personal growth advisor combining stoic wisdom with modern psychology. 
+    let systemPrompt = '';
+    
+    if (phase === "morning") {
+      systemPrompt = `You are a personal growth advisor combining stoic wisdom with modern psychology. 
 Generate a structured daily insight in JSON format with these exact fields:
 {
   "title": "Daily Insight",
@@ -50,6 +53,42 @@ User Context:
 - Current Situation: ${situation}
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
+    } else {
+      // Midday insight
+      systemPrompt = `You are a personal growth advisor. The user is at midday and has shared their reflection. Generate a supportive midday insight to help them adjust and finish strong.
+
+Morning Context:
+- Morning Insight: ${JSON.stringify(morningInsight)}
+- Focus Areas: ${focusAreas}
+
+Midday Reflection:
+${middayReflection}
+
+Generate a JSON response with these exact fields:
+{
+  "title": "Brief title about adjustment/refocus (3-5 words)",
+  "quote": {
+    "text": "An inspiring quote about resilience or momentum",
+    "author": "Quote author"
+  },
+  "mainInsight": "2-3 sentences acknowledging their midday reflection and providing guidance for the afternoon",
+  "actionItems": [
+    {"text": "Adjusted action 1 for afternoon"},
+    {"text": "Adjusted action 2 for afternoon"},
+    {"text": "Adjusted action 3 for afternoon"}
+  ],
+  "deeperInsight": "A supportive reflection on their progress (1-2 sentences)"
+}
+
+Guidelines:
+- Acknowledge what they shared in their midday reflection
+- Be encouraging and realistic
+- Help them refocus and prioritize for the remaining day
+- Reference morning action items if relevant
+- Keep tone supportive and energizing
+
+Return ONLY valid JSON, no markdown, no code blocks.`;
+    }
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

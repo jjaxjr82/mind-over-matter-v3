@@ -54,6 +54,7 @@ export type Database = {
           midday_adjustment: string | null
           midday_complete: boolean
           midday_follow_up: Json[] | null
+          midday_insight: Json | null
           morning_complete: boolean
           morning_follow_up: Json[] | null
           morning_insight: Json | null
@@ -74,6 +75,7 @@ export type Database = {
           midday_adjustment?: string | null
           midday_complete?: boolean
           midday_follow_up?: Json[] | null
+          midday_insight?: Json | null
           morning_complete?: boolean
           morning_follow_up?: Json[] | null
           morning_insight?: Json | null
@@ -94,6 +96,7 @@ export type Database = {
           midday_adjustment?: string | null
           midday_complete?: boolean
           midday_follow_up?: Json[] | null
+          midday_insight?: Json | null
           morning_complete?: boolean
           morning_follow_up?: Json[] | null
           morning_insight?: Json | null
