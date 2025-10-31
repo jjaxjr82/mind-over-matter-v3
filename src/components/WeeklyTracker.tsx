@@ -1,4 +1,5 @@
-import { format, startOfWeek, addDays, endOfWeek } from "date-fns";
+import { format, addDays } from "date-fns";
+import { formatDateForDB, getEasternWeekStart, addDaysET, getEasternDate } from "@/utils/timezoneUtils";
 import { CheckCircle2, Circle, AlertCircle, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 
 export const WeeklyTracker = ({ weeklyLogs, selectedDate, onDateSelect }: WeeklyTrackerProps) => {
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday
+  const weekStart = getEasternWeekStart(selectedDate); // Monday in ET
 
   const goToPreviousWeek = () => {
     const newDate = new Date(selectedDate);
@@ -48,7 +49,7 @@ export const WeeklyTracker = ({ weeklyLogs, selectedDate, onDateSelect }: Weekly
 
   const getWeekRangeText = () => {
     const start = weekStart;
-    const end = endOfWeek(selectedDate, { weekStartsOn: 1 });
+    const end = addDaysET(weekStart, 6); // Sunday
     
     const startMonth = format(start, "MMM");
     const endMonth = format(end, "MMM");
@@ -141,12 +142,12 @@ export const WeeklyTracker = ({ weeklyLogs, selectedDate, onDateSelect }: Weekly
       </div>
       <div className="grid grid-cols-7 gap-2">
         {DAYS.map((dayName, index) => {
-          const date = addDays(weekStart, index);
-          const dateStr = format(date, "yyyy-MM-dd");
+          const date = addDaysET(weekStart, index);
+          const dateStr = formatDateForDB(date);
           const log = weeklyLogs[dayName];
           const status = getCompletionStatus(log);
-          const isSelected = format(selectedDate, "yyyy-MM-dd") === dateStr;
-          const isToday = format(new Date(), "yyyy-MM-dd") === dateStr;
+          const isSelected = formatDateForDB(selectedDate) === dateStr;
+          const isToday = formatDateForDB(getEasternDate()) === dateStr;
 
           return (
             <button

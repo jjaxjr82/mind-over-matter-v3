@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { parseScheduleFromExternalDB } from "@/utils/databaseSchemaAdapters";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { getEasternDate, formatDateForDB, parseDateFromDB, getWeekBoundaries, getEasternDayName } from "@/utils/timezoneUtils";
 import {
   Sun,
   Sunrise,
@@ -338,26 +339,23 @@ const Index = () => {
         // Load focus areas and schedule - get the data directly
         const loadedWeekSchedule = await loadFocusAreas();
 
-        // Load this week's daily logs
-        const now = new Date();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+        // Load this week's daily logs using ET timezone
+        const now = getEasternDate();
+        const { start: weekStart, end: weekEnd } = getWeekBoundaries(now);
 
         const { data: weekLogsData, error: weekLogsError } = await externalClient
           .from("daily_logs")
           .select("*")
           .eq("user_id", user.id)
-          .gte("date", startOfWeek.toISOString().split("T")[0])
-          .lte("date", endOfWeek.toISOString().split("T")[0]);
+          .gte("date", formatDateForDB(weekStart))
+          .lte("date", formatDateForDB(weekEnd));
 
         if (weekLogsError) throw weekLogsError;
 
         const weekLogsMap: Record<string, DailyLog> = {};
         weekLogsData?.forEach((log) => {
-          const logDate = new Date(log.date);
-          const dayName = DAYS[logDate.getDay() === 0 ? 6 : logDate.getDay() - 1];
+          const logDate = parseDateFromDB(log.date);
+          const dayName = getEasternDayName(logDate);
           weekLogsMap[dayName] = {
             id: log.id,
             date: log.date,
@@ -394,8 +392,8 @@ const Index = () => {
 
     const loadDailyLog = async () => {
       try {
-        const dateStr = selectedDate.toISOString().split("T")[0];
-        const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+        const dateStr = formatDateForDB(selectedDate);
+        const dayName = getEasternDayName(selectedDate);
         const daySchedule = weekSchedule[dayName];
 
         const { data: logData, error: logError } = await externalClient
@@ -520,8 +518,8 @@ const Index = () => {
         console.log('🔄 Page visible again, reloading schedule data...');
         loadFocusAreas().then((loadedSchedule) => {
           // Update today's schedule settings with fresh data
-          const dateStr = selectedDate.toISOString().split("T")[0];
-          const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+          const dateStr = formatDateForDB(selectedDate);
+          const dayName = getEasternDayName(selectedDate);
           const daySchedule = loadedSchedule?.[dayName];
           
           if (daySchedule) {
@@ -593,7 +591,7 @@ const Index = () => {
       }
       
       // Update weeklyLogs state
-      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      const dayName = getEasternDayName(selectedDate);
       setWeeklyLogs(prev => ({
         ...prev,
         [dayName]: {
@@ -642,7 +640,7 @@ const Index = () => {
       }
       
       // Update weeklyLogs state
-      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      const dayName = getEasternDayName(selectedDate);
       setWeeklyLogs(prev => ({
         ...prev,
         [dayName]: {
@@ -690,7 +688,7 @@ const Index = () => {
       }
       
       // Update weeklyLogs state
-      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      const dayName = getEasternDayName(selectedDate);
       setWeeklyLogs(prev => ({
         ...prev,
         [dayName]: {
@@ -740,14 +738,13 @@ const Index = () => {
     try {
       const dayLog = weeklyLogs[day];
 
-      // Calculate the date for this day
-      const now = new Date();
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay() + 1);
+      // Calculate the date for this day using ET timezone
+      const now = getEasternDate();
+      const { start: weekStart } = getWeekBoundaries(now);
       const dayIndex = DAYS.indexOf(day);
-      const dayDate = new Date(startOfWeek);
-      dayDate.setDate(startOfWeek.getDate() + dayIndex);
-      const dateStr = dayDate.toISOString().split("T")[0];
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(weekStart.getDate() + dayIndex);
+      const dateStr = formatDateForDB(dayDate);
 
       if (!dayLog || !dayLog.id) {
         // Create new log for this day
@@ -790,7 +787,7 @@ const Index = () => {
       }
 
       // If it's today, also update dailyLog
-      const todayDayName = new Date().toLocaleString("en-us", { weekday: "long" });
+      const todayDayName = getEasternDayName(getEasternDate());
       if (day === todayDayName && dailyLog) {
         setDailyLog({ ...dailyLog, ...updates });
       }
