@@ -64,7 +64,7 @@ export const useScheduleManager = () => {
       
       try {
         const { data: settingsData, error: settingsError } = await (externalClient as any)
-          .from('user_preferences')
+          .from('user_settings')
           .select('setting_value')
           .eq('user_id', user.id)
           .eq('setting_key', 'focus_areas')
@@ -75,7 +75,7 @@ export const useScheduleManager = () => {
           loadedFocusAreas = settingsValue?.areas || [...DEFAULT_FOCUS_AREAS];
         }
       } catch (error) {
-        console.log('Could not load user preferences, using defaults');
+        console.log('Could not load user settings, using defaults');
       }
       
       console.log('✅ Focus areas loaded:', loadedFocusAreas);
@@ -179,7 +179,7 @@ export const useScheduleManager = () => {
       
       // Check if preference exists
       const { data: existing } = await (externalClient as any)
-        .from('user_preferences')
+        .from('user_settings')
         .select('id')
         .eq('user_id', user.id)
         .eq('setting_key', 'focus_areas')
@@ -188,14 +188,14 @@ export const useScheduleManager = () => {
       if (existing) {
         // Update existing
         const { error: updateError } = await (externalClient as any)
-          .from('user_preferences')
+          .from('user_settings')
           .update({ setting_value: { areas: updatedAreas } })
           .eq('id', existing.id);
         if (updateError) throw updateError;
       } else {
         // Insert new
         const { error: insertError } = await (externalClient as any)
-          .from('user_preferences')
+          .from('user_settings')
           .insert({
             user_id: user.id,
             setting_key: 'focus_areas',
@@ -231,12 +231,12 @@ export const useScheduleManager = () => {
       return updated;
     });
     
-    // Update user_preferences table
+    // Update user_settings table
     try {
       console.log('Removing focus area:', area);
       
       const { data: existing } = await (externalClient as any)
-        .from('user_preferences')
+        .from('user_settings')
         .select('id')
         .eq('user_id', user.id)
         .eq('setting_key', 'focus_areas')
@@ -244,7 +244,7 @@ export const useScheduleManager = () => {
       
       if (existing) {
         const { error: updateError } = await (externalClient as any)
-          .from('user_preferences')
+          .from('user_settings')
           .update({ setting_value: { areas: updatedAreas } })
           .eq('id', existing.id);
         
