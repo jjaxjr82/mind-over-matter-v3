@@ -133,35 +133,36 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
-      <div className="bg-card border-8 border-border w-full max-w-5xl h-[85vh] grid grid-rows-[auto_1fr]">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-0 sm:p-4">
+      <div className="bg-card border-4 sm:border-8 border-border w-full max-w-5xl h-screen sm:h-[85vh] grid grid-rows-[auto_1fr]">
         {/* Header */}
-        <header className="flex justify-between items-center p-4 border-b-4 border-border">
-          <h2 className="text-xl font-black text-foreground uppercase tracking-wider">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 p-3 sm:p-4 border-b-2 sm:border-b-4 border-border">
+          <h2 className="text-base sm:text-xl font-black text-foreground uppercase tracking-wider">
             Wisdom Sources ({entries.length})
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Button 
               onClick={() => {
                 setShowAddForm(true);
                 setSelectedId(null);
               }}
               size="sm"
-              className="border-4 border-foreground"
+              className="border-2 sm:border-4 border-foreground flex-1 sm:flex-initial"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Source
+              <span className="hidden sm:inline">Add Source</span>
+              <span className="sm:hidden">Add</span>
             </Button>
-            <button onClick={onClose} className="p-2 border-4 border-foreground hover:bg-muted">
-              <X className="h-5 w-5 text-foreground" />
+            <button onClick={onClose} className="p-1.5 sm:p-2 border-2 sm:border-4 border-foreground hover:bg-muted">
+              <X className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
             </button>
           </div>
         </header>
 
         {/* Main Content - CSS Grid Layout */}
-        <div className="grid grid-cols-[280px_1fr] min-h-0">
+        <div className="grid grid-cols-1 sm:grid-cols-[280px_1fr] min-h-0">
           {/* Left Panel - Source List */}
-          <div className="border-r-4 border-border grid grid-rows-[auto_1fr] min-h-0">
+          <div className="border-r-2 sm:border-r-4 border-border grid grid-rows-[auto_1fr] min-h-0">
             {/* Search & Filter Controls */}
             <div className="p-2 border-b-2 border-border bg-secondary/50 space-y-2">
               <div className="relative">
@@ -236,8 +237,8 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
           {/* Right Panel - Content Area */}
           <div className="min-h-0 overflow-y-auto">
             {showAddForm ? (
-              <div className="p-6">
-                <div className="mb-6 flex items-center gap-3">
+              <div className="p-4 sm:p-6">
+                <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
                   <Button
                     onClick={() => setShowAddForm(false)}
                     variant="ghost"
@@ -247,20 +248,20 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back
                   </Button>
-                  <h3 className="text-lg font-black text-foreground uppercase">Add New Source</h3>
+                  <h3 className="text-base sm:text-lg font-black text-foreground uppercase">Add New Source</h3>
                 </div>
 
-                <div className="space-y-6 max-w-2xl">
+                <div className="space-y-4 sm:space-y-6 max-w-2xl">
                   {/* AI Quick Add */}
-                  <div className="p-4 border-4 border-primary bg-primary/5">
-                    <label className="block text-sm font-black text-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
+                  <div className="p-3 sm:p-4 border-2 sm:border-4 border-primary bg-primary/5">
+                    <label className="block text-xs sm:text-sm font-black text-foreground mb-2 sm:mb-3 uppercase tracking-wider flex items-center gap-2">
                       <Sparkles className="h-4 w-4" />
                       AI Quick Add
                     </label>
-                    <div className="flex gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row gap-2 mb-2">
                       <Input
                         type="text"
-                        placeholder="Type anything... e.g., Barack Obama, Meditations, Stoicism"
+                        placeholder="Type anything... e.g., Barack Obama"
                         value={aiInput}
                         onChange={(e) => setAiInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
@@ -271,6 +272,7 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                         onClick={handleAiAnalyze} 
                         disabled={!aiInput.trim() || isAnalyzing}
                         size="lg"
+                        className="w-full sm:w-auto"
                       >
                         {isAnalyzing ? (
                           <span className="animate-spin">⚡</span>
@@ -332,7 +334,8 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                         </Button>
                         <Button onClick={handleAdd} disabled={!newName.trim()} className="flex-1">
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Source
+                          <span className="hidden sm:inline">Add Source</span>
+                          <span className="sm:hidden">Add</span>
                         </Button>
                       </div>
                     </div>
@@ -340,11 +343,11 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                 </div>
               </div>
             ) : selectedEntry ? (
-              <div className="p-6">
-                <div className="space-y-6">
+              <div className="p-4 sm:p-6">
+                <div className="space-y-4 sm:space-y-6">
                   <div>
                     <label className="text-xs font-black text-muted-foreground uppercase mb-2 block">Name</label>
-                    <h3 className="text-2xl font-black text-foreground uppercase tracking-wider">{selectedEntry.name}</h3>
+                    <h3 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-wider break-words">{selectedEntry.name}</h3>
                   </div>
                   {selectedEntry.description && (
                     <div>

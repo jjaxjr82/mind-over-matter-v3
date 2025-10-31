@@ -1885,13 +1885,13 @@ const Index = () => {
         onDelete={handleDeleteWisdom}
       />
 
-      <div className="min-h-screen bg-background flex flex-col p-4">
+      <div className="min-h-screen bg-background flex flex-col p-3 sm:p-4">
         <div className="w-full max-w-7xl mx-auto">
-          <header className="mb-6 pb-6 border-b border-border">
-            <div className="flex items-start justify-between mb-6">
+          <header className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-border">
+            <div className="flex items-start justify-between mb-4 sm:mb-6">
               <div>
                 <h1
-                  className="text-5xl font-impact leading-none tracking-tight uppercase mb-1"
+                  className="text-3xl sm:text-4xl md:text-5xl font-impact leading-none tracking-tight uppercase mb-1"
                   style={{
                     background: "linear-gradient(180deg, #FF0000 0%, #8B0000 100%)",
                     WebkitBackgroundClip: "text",
@@ -1918,44 +1918,44 @@ const Index = () => {
               </Button>
             </div>
             
-            <nav className="bg-muted/50 rounded-lg p-2 flex items-center justify-center gap-2">
+            <nav className="bg-muted/50 rounded-lg p-2 flex flex-wrap items-center justify-center gap-2">
               <Button
                 variant="ghost"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="h-10 px-3 bg-primary text-primary-foreground hover:bg-primary/90"
+                className="h-10 px-2 sm:px-3 bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                <Sun className="h-4 w-4 mr-2" />
-                <span className="text-sm font-bold">Today</span>
+                <Sun className="h-4 w-4 sm:mr-2" />
+                <span className="text-sm font-bold hidden sm:inline">Today</span>
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setIsChallengesModalOpen(true)}
-                className="h-10 px-3"
+                className="h-10 px-2 sm:px-3"
               >
-                <Target className="h-4 w-4 mr-2" />
-                <span className="text-sm font-bold">Challenges</span>
+                <Target className="h-4 w-4 sm:mr-2" />
+                <span className="text-sm font-bold hidden sm:inline">Challenges</span>
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setIsLibraryModalOpen(true)}
-                className="h-10 px-3"
+                className="h-10 px-2 sm:px-3"
               >
-                <BookOpen className="h-4 w-4 mr-2" />
-                <span className="text-sm font-bold">Library</span>
+                <BookOpen className="h-4 w-4 sm:mr-2" />
+                <span className="text-sm font-bold hidden sm:inline">Library</span>
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => navigate("/schedule")}
-                className="h-10 px-3"
+                className="h-10 px-2 sm:px-3"
               >
-                <CalendarIcon className="h-4 w-4 mr-2" />
-                <span className="text-sm font-bold">Schedule</span>
+                <CalendarIcon className="h-4 w-4 sm:mr-2" />
+                <span className="text-sm font-bold hidden sm:inline">Schedule</span>
               </Button>
             </nav>
           </header>
 
           {/* Weekly Progress Tracker */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <WeeklyTracker 
               weeklyLogs={weeklyLogs}
               selectedDate={selectedDate}
@@ -1964,7 +1964,7 @@ const Index = () => {
           </div>
 
           {/* Mobile Quick Reference - Show above timeline on mobile */}
-          <div className="lg:hidden mb-6 space-y-4">
+          <div className="lg:hidden mb-4 sm:mb-6 space-y-3 sm:space-y-4">
             {morningCompleted && dailyLog?.morning_insight && (
               <PhaseQuickReference
                 phase="morning"
@@ -1997,14 +1997,14 @@ const Index = () => {
           </div>
 
           {/* Two Column Layout: Timeline + Action Plan */}
-          <div className="flex gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
             {/* Main Timeline - Left Column */}
-            <div className="flex-1 w-full max-w-3xl bg-card border border-border rounded-lg p-6">
-              <div className="space-y-4">{renderPhase()}</div>
+            <div className="flex-1 w-full max-w-3xl bg-card border border-border rounded-lg p-4 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">{renderPhase()}</div>
             </div>
 
             {/* Quick Reference - Right Column (Sticky Sidebar) */}
-            <div className="w-[340px] sticky top-4 hidden lg:block space-y-4">
+            <div className="w-full lg:w-[340px] lg:sticky lg:top-4 hidden lg:block space-y-4">
               {morningCompleted && dailyLog?.morning_insight && (
                 <PhaseQuickReference
                   phase="morning"
