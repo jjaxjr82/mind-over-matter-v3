@@ -11,18 +11,18 @@ interface ActivePhaseCardProps {
 export const ActivePhaseCard = ({ phase, title, icon, children }: ActivePhaseCardProps) => {
   return (
     <Card className="border-2 border-primary shadow-lg">
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
             {icon}
           </div>
           <div>
-            <h2 className="text-xl font-bold">{title}</h2>
-            <p className="text-sm text-muted-foreground">Available now</p>
+            <h2 className="text-lg sm:text-xl font-bold">{title}</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">Available now</p>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6 space-y-4">
         {children}
       </CardContent>
     </Card>

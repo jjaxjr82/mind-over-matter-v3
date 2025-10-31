@@ -134,7 +134,7 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-0 sm:p-4">
-      <div className="bg-card border-4 sm:border-8 border-border w-full max-w-5xl h-screen sm:h-[85vh] grid grid-rows-[auto_1fr]">
+      <div className="bg-card border-4 sm:border-8 border-border w-full max-w-5xl h-screen sm:h-[90vh] grid grid-rows-[auto_1fr]">
         {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 p-3 sm:p-4 border-b-2 sm:border-b-4 border-border">
           <h2 className="text-base sm:text-xl font-black text-foreground uppercase tracking-wider">
@@ -160,32 +160,33 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
         </header>
 
         {/* Main Content - CSS Grid Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-[280px_1fr] min-h-0">
+        <div className="grid grid-cols-1 sm:grid-cols-[280px_1fr] min-h-0 overflow-hidden">
           {/* Left Panel - Source List */}
-          <div className="border-r-2 sm:border-r-4 border-border grid grid-rows-[auto_1fr] min-h-0">
+          <div className="border-r-0 sm:border-r-2 md:border-r-4 border-border grid grid-rows-[auto_1fr] min-h-0 overflow-hidden">
             {/* Search & Filter Controls */}
-            <div className="p-2 border-b-2 border-border bg-secondary/50 space-y-2">
+            <div className="p-3 sm:p-2 border-b-2 border-border bg-secondary/50 space-y-2">
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-3 sm:w-3 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search sources..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-7 h-8 text-xs"
+                  className="pl-8 sm:pl-7 h-10 sm:h-8 text-sm sm:text-xs min-h-[44px] sm:min-h-0"
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase">Show Active Only</span>
+              <div className="flex items-center justify-between min-h-[44px] sm:min-h-0">
+                <span className="text-xs sm:text-xs font-bold text-muted-foreground uppercase">Show Active Only</span>
                 <Checkbox
                   checked={showActiveOnly}
                   onCheckedChange={(checked) => setShowActiveOnly(checked as boolean)}
+                  className="h-5 w-5 sm:h-4 sm:w-4"
                 />
               </div>
             </div>
 
             {/* Source List - Native Scrolling */}
-            <div className="overflow-y-auto">
+            <div className="overflow-y-auto overflow-x-hidden min-h-0">
               {entries.length === 0 ? (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                   No sources yet
@@ -235,7 +236,7 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
           </div>
 
           {/* Right Panel - Content Area */}
-          <div className="min-h-0 overflow-y-auto">
+          <div className="min-h-0 overflow-y-auto overflow-x-hidden">
             {showAddForm ? (
               <div className="p-4 sm:p-6">
                 <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
@@ -266,13 +267,13 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                         onChange={(e) => setAiInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
                         disabled={isAnalyzing}
-                        className="flex-1"
+                        className="flex-1 min-h-[44px] text-sm sm:text-base"
                       />
                       <Button 
                         onClick={handleAiAnalyze} 
                         disabled={!aiInput.trim() || isAnalyzing}
                         size="lg"
-                        className="w-full sm:w-auto"
+                        className="w-full sm:w-auto min-h-[44px]"
                       >
                         {isAnalyzing ? (
                           <span className="animate-spin">⚡</span>
@@ -300,6 +301,7 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                           type="text"
                           value={newName}
                           onChange={(e) => setNewName(e.target.value)}
+                          className="min-h-[44px] text-sm sm:text-base"
                         />
                       </div>
                       <div>
@@ -310,6 +312,7 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                           value={newDescription}
                           onChange={(e) => setNewDescription(e.target.value)}
                           rows={3}
+                          className="text-sm sm:text-base"
                         />
                       </div>
                       <div>
@@ -320,6 +323,7 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                           type="text"
                           value={newTag}
                           onChange={(e) => setNewTag(e.target.value)}
+                          className="min-h-[44px] text-sm sm:text-base"
                         />
                       </div>
                       <div className="flex gap-3 pt-4">
@@ -329,10 +333,10 @@ const WisdomLibraryModal = ({ isOpen, onClose, entries, onToggle, onAdd, onDelet
                           setNewDescription('');
                           setNewTag('');
                           setAiInput('');
-                        }} variant="outline" className="flex-1">
+                        }} variant="outline" className="flex-1 min-h-[44px]">
                           Cancel
                         </Button>
-                        <Button onClick={handleAdd} disabled={!newName.trim()} className="flex-1">
+                        <Button onClick={handleAdd} disabled={!newName.trim()} className="flex-1 min-h-[44px]">
                           <Plus className="h-4 w-4 mr-2" />
                           <span className="hidden sm:inline">Add Source</span>
                           <span className="sm:hidden">Add</span>

@@ -1417,7 +1417,9 @@ const Index = () => {
           >
             {dailyLog.morning_insight ? (
               <div className="space-y-4">
-                <InsightCard insight={dailyLog.morning_insight} />
+                <div className="mx-auto max-w-2xl">
+                  <InsightCard insight={dailyLog.morning_insight} />
+                </div>
                 <FollowUpChat
                   conversation={dailyLog.morning_follow_up || []}
                   onFollowUp={(q) => handleFollowUp(q, "morning")}
@@ -1618,7 +1620,9 @@ const Index = () => {
             >
               {dailyLog.midday_insight ? (
                 <div className="space-y-4">
-                  <InsightCard insight={dailyLog.midday_insight} />
+                  <div className="mx-auto max-w-2xl">
+                    <InsightCard insight={dailyLog.midday_insight} />
+                  </div>
                   <FollowUpChat
                     conversation={dailyLog.midday_follow_up || []}
                     onFollowUp={(q) => handleFollowUp(q, "midday")}
@@ -1717,7 +1721,9 @@ const Index = () => {
               <div className="space-y-4">
                 {dailyLog.evening_insight ? (
                   <>
-                    <InsightCard insight={dailyLog.evening_insight} />
+                    <div className="mx-auto max-w-2xl">
+                      <InsightCard insight={dailyLog.evening_insight} />
+                    </div>
                     <Button onClick={() => markPhaseComplete("evening")} className="w-full" size="lg">
                       Complete Day
                     </Button>
@@ -1885,7 +1891,7 @@ const Index = () => {
         onDelete={handleDeleteWisdom}
       />
 
-      <div className="min-h-screen bg-background flex flex-col p-3 sm:p-4">
+      <div className="min-h-screen bg-background flex flex-col p-4 sm:p-6">
         <div className="w-full max-w-7xl mx-auto">
           <header className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-border">
             <div className="flex items-start justify-between mb-4 sm:mb-6">
@@ -1997,10 +2003,10 @@ const Index = () => {
           </div>
 
           {/* Two Column Layout: Timeline + Action Plan */}
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
             {/* Main Timeline - Left Column */}
-            <div className="flex-1 w-full max-w-3xl bg-card border border-border rounded-lg p-4 sm:p-6">
-              <div className="space-y-3 sm:space-y-4">{renderPhase()}</div>
+            <div className="flex-1 w-full max-w-3xl bg-card border border-border rounded-lg p-5 sm:p-6">
+              <div className="space-y-4">{renderPhase()}</div>
             </div>
 
             {/* Quick Reference - Right Column (Sticky Sidebar) */}

@@ -29,14 +29,14 @@ export const CompactPhaseCard = ({
 
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-      <div className="border-l-2 border-primary bg-accent/50 rounded-lg p-4">
-        <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between hover:opacity-80 transition-opacity">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+      <div className="border-l-2 border-primary bg-accent/50 rounded-lg p-4 sm:p-5">
+        <CollapsibleTrigger className="w-full min-h-[44px]">
+          <div className="flex items-center justify-between hover:opacity-80 transition-opacity gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
               <div className="flex items-center gap-2">
-                {icon}
-                <span className="font-semibold">{title}</span>
+                <span className="flex-shrink-0">{icon}</span>
+                <span className="font-semibold text-sm sm:text-base">{title}</span>
               </div>
               {timestamp && (
                 <span className="text-xs text-muted-foreground">
@@ -44,7 +44,7 @@ export const CompactPhaseCard = ({
                 </span>
               )}
             </div>
-            <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+            <ChevronDown className={`h-5 w-5 transition-transform flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`} />
           </div>
         </CollapsibleTrigger>
         
@@ -52,19 +52,19 @@ export const CompactPhaseCard = ({
           <div className="space-y-4">
             {children}
             
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               {onReopen && (
-                <Button size="sm" variant="outline" onClick={onReopen}>
+                <Button size="sm" variant="outline" onClick={onReopen} className="min-h-[44px] w-full sm:w-auto">
                   Reopen Phase
                 </Button>
               )}
               {onRegenerate && (
-                <Button size="sm" variant="outline" onClick={onRegenerate}>
+                <Button size="sm" variant="outline" onClick={onRegenerate} className="min-h-[44px] w-full sm:w-auto">
                   Regenerate
                 </Button>
               )}
               {onReset && (
-                <Button size="sm" variant="destructive" onClick={onReset}>
+                <Button size="sm" variant="destructive" onClick={onReset} className="min-h-[44px] w-full sm:w-auto">
                   Reset
                 </Button>
               )}
