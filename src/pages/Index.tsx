@@ -1136,24 +1136,8 @@ const Index = () => {
       setMorningCompleted(false);
     } else if (phase === "midday") {
       setMiddayCompleted(false);
-      // Clear midday insight to show input field again
-      const updates: Partial<DailyLog> = {
-        midday_insight: null as any,
-        midday_follow_up: []
-      };
-      await updateLog(updates);
-      setDailyLog(prev => prev ? { ...prev, midday_insight: null as any, midday_follow_up: [] } : null);
     } else if (phase === "evening") {
       setEveningCompleted(false);
-      // Clear evening data to show input fields again
-      const updates: Partial<DailyLog> = {
-        evening_insight: null as any,
-        win: "",
-        weakness: "",
-        tomorrows_prep: ""
-      };
-      await updateLog(updates);
-      setDailyLog(prev => prev ? { ...prev, evening_insight: null as any, win: "", weakness: "", tomorrows_prep: "" } : null);
     }
     toast.success(`${phase.charAt(0).toUpperCase() + phase.slice(1)} phase reopened`);
   };
