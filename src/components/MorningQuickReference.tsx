@@ -94,21 +94,37 @@ export const MorningQuickReference = ({ insight, checkedItems, onCheckItem }: Mo
                 <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">Recommended Resources</span>
               </div>
               <div className="space-y-2">
-                {recommendations.map((rec: any, index: number) => (
-                  <div key={index} className="flex items-start gap-2 text-sm border-l-2 border-muted pl-3 py-1">
-                    <span className="text-base flex-shrink-0">{rec.type === "article" ? "📄" : "🎧"}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="font-bold text-foreground">{rec.title}</span>
-                        {rec.estimatedTime && (
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
-                            {rec.estimatedTime}
-                          </span>
-                        )}
+                {recommendations.map((rec: any, index: number) => {
+                  const content = (
+                    <div className="flex items-start gap-2 text-sm border-l-2 border-muted pl-3 py-1 hover:border-primary transition-colors">
+                      <span className="text-base flex-shrink-0">{rec.type === "article" ? "📄" : "🎧"}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className="font-bold text-foreground hover:text-primary transition-colors">{rec.title}</span>
+                          {rec.estimatedTime && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {rec.estimatedTime}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                  
+                  return rec.url ? (
+                    <a 
+                      key={index} 
+                      href={rec.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      {content}
+                    </a>
+                  ) : (
+                    <div key={index}>{content}</div>
+                  );
+                })}
               </div>
             </div>
           </>

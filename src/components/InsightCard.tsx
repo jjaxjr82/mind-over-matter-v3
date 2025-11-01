@@ -22,6 +22,7 @@ interface InsightData {
     title: string;
     description: string;
     estimatedTime: string;
+    url?: string;
   }>;
 }
 
@@ -176,31 +177,44 @@ const InsightCard = ({ insight }: InsightCardProps) => {
             Recommended Resources
           </h3>
           <div className="space-y-3">
-            {insight.recommendations.map((rec, index) => (
-              <div
-                key={index}
-                className="p-3 bg-background border-2 border-foreground hover:bg-primary hover:text-background transition-all"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    {rec.type === 'article' ? (
-                      <FileText className="h-5 w-5" />
-                    ) : (
-                      <Headphones className="h-5 w-5" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-black text-sm uppercase tracking-wide">{rec.title}</h4>
-                      <span className="text-xs font-bold uppercase tracking-wider opacity-70 whitespace-nowrap">
-                        {rec.estimatedTime}
-                      </span>
+            {insight.recommendations.map((rec, index) => {
+              const content = (
+                <div className="p-3 bg-background border-2 border-foreground hover:bg-primary hover:text-background transition-all cursor-pointer">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {rec.type === 'article' ? (
+                        <FileText className="h-5 w-5" />
+                      ) : (
+                        <Headphones className="h-5 w-5" />
+                      )}
                     </div>
-                    <p className="text-xs font-bold leading-relaxed">{rec.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-black text-sm uppercase tracking-wide">{rec.title}</h4>
+                        <span className="text-xs font-bold uppercase tracking-wider opacity-70 whitespace-nowrap">
+                          {rec.estimatedTime}
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold leading-relaxed">{rec.description}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+
+              return rec.url ? (
+                <a 
+                  key={index} 
+                  href={rec.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  {content}
+                </a>
+              ) : (
+                <div key={index}>{content}</div>
+              );
+            })}
           </div>
         </div>
       )}
