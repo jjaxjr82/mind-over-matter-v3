@@ -1132,14 +1132,38 @@ const Index = () => {
   };
 
   const reopenPhase = async (phase: "morning" | "midday" | "evening") => {
-    if (phase === "morning") {
-      setMorningCompleted(false);
-    } else if (phase === "midday") {
-      setMiddayCompleted(false);
-    } else if (phase === "evening") {
-      setEveningCompleted(false);
+    try {
+      const updates: any = {};
+      
+      if (phase === "morning") {
+        updates.morning_complete = false;
+        setMorningCompleted(false);
+      } else if (phase === "midday") {
+        updates.midday_complete = false;
+        setMiddayCompleted(false);
+      } else if (phase === "evening") {
+        updates.evening_complete = false;
+        setEveningCompleted(false);
+      }
+      
+      // Save to database
+      await updateLog(updates);
+      
+      // Update weeklyLogs state with the new completion status
+      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      setWeeklyLogs(prev => ({
+        ...prev,
+        [dayName]: {
+          ...prev[dayName],
+          [`${phase}_complete`]: false
+        }
+      }));
+      
+      toast.success(`${phase.charAt(0).toUpperCase() + phase.slice(1)} phase reopened`);
+    } catch (error: any) {
+      console.error(`Error reopening ${phase}:`, error);
+      toast.error(`Failed to reopen ${phase}`);
     }
-    toast.success(`${phase.charAt(0).toUpperCase() + phase.slice(1)} phase reopened`);
   };
 
   // Handle checking action items
