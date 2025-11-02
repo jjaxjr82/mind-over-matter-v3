@@ -1359,50 +1359,6 @@ const Index = () => {
     }, 500);
   };
 
-  const renderMorningDetails = () => {
-    if (!dailyLog?.morning_insight) return null;
-    const quote = getQuoteDisplay(dailyLog.morning_insight.quote);
-    
-    return (
-      <div className="space-y-4">
-        {quote && (
-          <div className="bg-background/50 rounded-lg p-4 border-l-4 border-primary">
-            <p className="text-sm italic">"{quote.text}"</p>
-            {quote.author && (
-              <p className="text-xs text-muted-foreground mt-2">— {quote.author}</p>
-            )}
-          </div>
-        )}
-        {dailyLog.morning_insight.analysis && (
-          <div className="bg-background/50 rounded-lg p-4">
-            <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Analysis</h4>
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.morning_insight.analysis}</p>
-          </div>
-        )}
-        {dailyLog.morning_insight.mantra && (
-          <div className="bg-background/50 rounded-lg p-4">
-            <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Your Mantra</h4>
-            <p className="text-sm font-bold">{dailyLog.morning_insight.mantra}</p>
-          </div>
-        )}
-        {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
-          <div className="bg-background/50 rounded-lg p-4">
-            <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
-            <div className="space-y-3">
-              {dailyLog.morning_follow_up.map((msg: any, idx: number) => (
-                <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
-                  <div className="text-xs font-bold uppercase tracking-wide mb-1">
-                    {msg.role === 'user' ? 'You' : 'Coach'}
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
 
   const renderPhase = () => {
@@ -1599,7 +1555,26 @@ const Index = () => {
             onRegenerate={() => generateDailyInsight("morning")}
             onReset={resetMorning}
           >
-            {renderMorningDetails()}
+            <div className="space-y-4">
+              <div className="mx-auto max-w-2xl">
+                <InsightCard insight={dailyLog.morning_insight} />
+              </div>
+              {dailyLog.morning_follow_up && dailyLog.morning_follow_up.length > 0 && (
+                <div className="bg-background/50 rounded-lg p-4">
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                  <div className="space-y-3">
+                    {dailyLog.morning_follow_up.map((msg: any, idx: number) => (
+                      <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                        <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                          {msg.role === 'user' ? 'You' : 'Coach'}
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </CompactPhaseCard>
         )}
 
@@ -1693,10 +1668,24 @@ const Index = () => {
                   <p className="text-sm whitespace-pre-wrap">{dailyLog.midday_adjustment}</p>
                 </div>
               )}
-              {dailyLog.midday_insight?.analysis && (
+              {dailyLog.midday_insight && (
+                <div className="mx-auto max-w-2xl">
+                  <InsightCard insight={dailyLog.midday_insight} />
+                </div>
+              )}
+              {dailyLog.midday_follow_up && dailyLog.midday_follow_up.length > 0 && (
                 <div className="bg-background/50 rounded-lg p-4">
-                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Midday Analysis</h4>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.midday_insight.analysis}</p>
+                  <h4 className="font-bold text-sm uppercase tracking-wide mb-3">Follow-up Conversation</h4>
+                  <div className="space-y-3">
+                    {dailyLog.midday_follow_up.map((msg: any, idx: number) => (
+                      <div key={idx} className={`p-3 rounded ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                        <div className="text-xs font-bold uppercase tracking-wide mb-1">
+                          {msg.role === 'user' ? 'You' : 'Coach'}
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1823,17 +1812,8 @@ const Index = () => {
                 </div>
               )}
               {dailyLog.evening_insight && (
-                <div className="bg-background/50 rounded-lg p-4">
-                  <h4 className="font-bold text-sm uppercase tracking-wide mb-2">Evening Insight</h4>
-                  {dailyLog.evening_insight.analysis && (
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{dailyLog.evening_insight.analysis}</p>
-                  )}
-                  {dailyLog.evening_insight.tomorrowsFocus && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <div className="text-xs font-bold uppercase tracking-wide mb-1">Tomorrow's Focus</div>
-                      <p className="text-sm">{dailyLog.evening_insight.tomorrowsFocus}</p>
-                    </div>
-                  )}
+                <div className="mx-auto max-w-2xl">
+                  <InsightCard insight={dailyLog.evening_insight} />
                 </div>
               )}
             </div>
