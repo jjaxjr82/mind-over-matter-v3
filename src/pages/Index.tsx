@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { externalClient } from "@/integrations/supabase/externalClient";
 import { dualInsert, dualUpdate, dualDelete } from "@/integrations/supabase/dualWrite";
 import { supabase } from "@/integrations/supabase/client";
-import { parseScheduleFromExternalDB } from "@/utils/databaseSchemaAdapters";
+import { parseScheduleFromExternalDB, parseScheduleFromCloudDB } from "@/utils/databaseSchemaAdapters";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getEasternDate, formatDateForDB, parseDateFromDB, getWeekBoundaries, getEasternDayName } from "@/utils/timezoneUtils";
@@ -244,23 +244,35 @@ const Index = () => {
       const scheduleMap: Record<string, string> = {};
       const weekScheduleMap: Record<string, WeekSchedule> = {};
 
+      // Detect schema format by checking first row
+      let useNewSchema = false;
+      if (scheduleData && scheduleData.length > 0) {
+        const firstRow = scheduleData[0];
+        useNewSchema = 'work_mode' in firstRow && firstRow.work_mode !== undefined;
+        console.log('🔍 Schema detected:', useNewSchema ? 'NEW (work_mode column)' : 'OLD (work_mode in tags)');
+      }
+
       scheduleData?.forEach((day) => {
         if (day.day_of_week === "_focus_areas_") return; // Skip master record
 
-        const tags = day.tags || [];
-        const workMode = tags.find((t: string) => WORK_MODES.includes(t as any)) || "WFH";
-        const focusAreas = tags.filter(
-          (t: string) => !WORK_MODES.includes(t as any) && !ENERGY_LEVELS.includes(t as any),
-        );
+        // Use appropriate parser based on detected schema
+        const parsed = useNewSchema 
+          ? parseScheduleFromExternalDB(day)
+          : parseScheduleFromCloudDB(day);
 
         const tagsPart = day.tags?.length ? `${day.tags.join(", ")}. ` : "";
         scheduleMap[day.day_of_week] = `${tagsPart}${day.description || ""}`.trim();
 
         weekScheduleMap[day.day_of_week] = {
           day_of_week: day.day_of_week,
-          work_mode: workMode,
-          focus_areas: focusAreas,
+          work_mode: parsed.work_mode,
+          focus_areas: parsed.focus_areas,
         };
+        
+        console.log(`📋 Parsed ${day.day_of_week}:`, {
+          work_mode: parsed.work_mode,
+          focus_areas: parsed.focus_areas.length
+        });
       });
 
       setSchedule(scheduleMap);
