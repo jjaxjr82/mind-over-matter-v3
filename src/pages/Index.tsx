@@ -576,12 +576,22 @@ const Index = () => {
     if (!dailyLog?.id) return;
     
     try {
+      // Reset morning, midday, and evening (cascade)
       const { error } = await externalClient
         .from("daily_logs")
         .update({
           morning_complete: false,
           morning_insight: null,
-          morning_follow_up: []
+          morning_follow_up: [],
+          midday_complete: false,
+          midday_insight: null,
+          midday_follow_up: [],
+          midday_adjustment: "",
+          evening_complete: false,
+          evening_insight: null,
+          win: "",
+          weakness: "",
+          tomorrows_prep: ""
         })
         .eq("id", dailyLog.id);
       
@@ -599,7 +609,13 @@ const Index = () => {
       if (refreshed) {
         setDailyLog(refreshed as any);
         setMorningCompleted(false);
-        setCompletedActionItems({ ...completedActionItems, morning: [] });
+        setMiddayCompleted(false);
+        setEveningCompleted(false);
+        setMiddayAdjustmentText("");
+        setWinText("");
+        setWeaknessText("");
+        setTomorrowsPrepText("");
+        setCompletedActionItems({ morning: [], midday: [] });
       }
       
       // Update weeklyLogs state
@@ -609,10 +625,12 @@ const Index = () => {
         [dayName]: {
           ...prev[dayName],
           morning_complete: false,
+          midday_complete: false,
+          evening_complete: false,
         }
       }));
       
-      toast.success("Morning reset - you can now generate a fresh insight");
+      toast.success("Morning reset - all phases reset for fresh insights");
     } catch (error: any) {
       console.error("Error resetting morning:", error);
       toast.error(`Failed to reset: ${error.message}`);
@@ -623,13 +641,19 @@ const Index = () => {
     if (!dailyLog?.id) return;
     
     try {
+      // Reset midday and evening (cascade)
       const { error } = await externalClient
         .from("daily_logs")
         .update({
           midday_complete: false,
           midday_insight: null,
           midday_follow_up: [],
-          midday_adjustment: ""
+          midday_adjustment: "",
+          evening_complete: false,
+          evening_insight: null,
+          win: "",
+          weakness: "",
+          tomorrows_prep: ""
         })
         .eq("id", dailyLog.id);
       
@@ -647,7 +671,11 @@ const Index = () => {
       if (refreshed) {
         setDailyLog(refreshed as any);
         setMiddayCompleted(false);
+        setEveningCompleted(false);
         setMiddayAdjustmentText("");
+        setWinText("");
+        setWeaknessText("");
+        setTomorrowsPrepText("");
         setCompletedActionItems({ ...completedActionItems, midday: [] });
       }
       
@@ -658,10 +686,11 @@ const Index = () => {
         [dayName]: {
           ...prev[dayName],
           midday_complete: false,
+          evening_complete: false,
         }
       }));
       
-      toast.success("Midday reset - you can now generate a fresh insight");
+      toast.success("Midday reset - midday and evening phases reset");
     } catch (error: any) {
       console.error("Error resetting midday:", error);
       toast.error(`Failed to reset: ${error.message}`);
@@ -1127,7 +1156,7 @@ const Index = () => {
       await updateLog(updates);
       
       // Update weeklyLogs state with the new completion status
-      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      const dayName = getEasternDayName(selectedDate);
       setWeeklyLogs(prev => ({
         ...prev,
         [dayName]: {
@@ -1162,7 +1191,7 @@ const Index = () => {
       await updateLog(updates);
       
       // Update weeklyLogs state with the new completion status
-      const dayName = DAYS[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1];
+      const dayName = getEasternDayName(selectedDate);
       setWeeklyLogs(prev => ({
         ...prev,
         [dayName]: {
