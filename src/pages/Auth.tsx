@@ -114,8 +114,8 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-5xl font-black text-primary tracking-tight">JaxTrax</CardTitle>
-          <CardDescription className="text-lg mt-2">Your daily guide to mindful nutrition</CardDescription>
+          <CardTitle className="text-5xl font-black text-primary tracking-tight">Mind Over Matter</CardTitle>
+          <CardDescription className="text-lg mt-2">Daily reflection & productivity</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
