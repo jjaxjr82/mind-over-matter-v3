@@ -72,6 +72,7 @@ interface DailyLog {
   midday_adjustment: string;
   midday_follow_up: any[];
   evening_insight?: any;
+  evening_follow_up?: any[];
   win: string;
   weakness: string;
   tomorrows_prep: string;
@@ -180,6 +181,7 @@ const Index = () => {
   const [tomorrowsPrepText, setTomorrowsPrepText] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const weekScheduleRef = useRef<Record<string, WeekSchedule>>({});
   
   // Today's schedule settings (from schedule, not stored in daily_logs)
   const [todayWorkMode, setTodayWorkMode] = useState<string>("WFH");
@@ -368,7 +370,7 @@ const Index = () => {
         weekLogsData?.forEach((log) => {
           const logDate = parseDateFromDB(log.date);
           const dayName = getEasternDayName(logDate);
-          weekLogsMap[dayName] = {
+        weekLogsMap[dayName] = {
             id: log.id,
             date: log.date,
             situation: log.situation || "",
@@ -377,6 +379,8 @@ const Index = () => {
             midday_insight: log.midday_insight,
             midday_adjustment: log.midday_adjustment || "",
             midday_follow_up: Array.isArray(log.midday_follow_up) ? log.midday_follow_up : [],
+            evening_insight: log.evening_insight,
+            evening_follow_up: Array.isArray(log.evening_follow_up) ? log.evening_follow_up : [],
             win: log.win || "",
             weakness: log.weakness || "",
             tomorrows_prep: log.tomorrows_prep || "",
@@ -398,6 +402,11 @@ const Index = () => {
     loadData();
   }, [user, authChecked, loadFocusAreas]);
 
+  // Keep weekScheduleRef in sync
+  useEffect(() => {
+    weekScheduleRef.current = weekSchedule;
+  }, [weekSchedule]);
+
   // Load daily log when selected date changes
   useEffect(() => {
     if (!user || !authChecked) return;
@@ -406,7 +415,7 @@ const Index = () => {
       try {
         const dateStr = formatDateForDB(selectedDate);
         const dayName = getEasternDayName(selectedDate);
-        const daySchedule = weekSchedule[dayName];
+        const daySchedule = weekScheduleRef.current[dayName];
 
         const { data: logData, error: logError } = await externalClient
           .from("daily_logs")
@@ -427,6 +436,8 @@ const Index = () => {
             midday_insight: logData.midday_insight,
             midday_adjustment: logData.midday_adjustment || "",
             midday_follow_up: Array.isArray(logData.midday_follow_up) ? logData.midday_follow_up : [],
+            evening_insight: logData.evening_insight,
+            evening_follow_up: Array.isArray(logData.evening_follow_up) ? logData.evening_follow_up : [],
             win: logData.win || "",
             weakness: logData.weakness || "",
             tomorrows_prep: logData.tomorrows_prep || "",
@@ -449,10 +460,11 @@ const Index = () => {
             midday: (completedItems.midday as number[]) || []
           });
           
-          // Set schedule settings for this day
-          if (daySchedule) {
-            setTodayWorkMode(daySchedule.work_mode);
-            setTodayFocusAreas(daySchedule.focus_areas);
+          // Set schedule settings for this day using ref
+          const currentDaySchedule = weekScheduleRef.current[dayName];
+          if (currentDaySchedule) {
+            setTodayWorkMode(currentDaySchedule.work_mode);
+            setTodayFocusAreas(currentDaySchedule.focus_areas);
           }
           
           // Set phase completion based on log
@@ -473,7 +485,10 @@ const Index = () => {
             morning_insight: null,
             morning_follow_up: [],
             midday_adjustment: "",
+            midday_insight: null,
             midday_follow_up: [],
+            evening_insight: null,
+            evening_follow_up: [],
             win: "",
             weakness: "",
             tomorrows_prep: "",
@@ -487,6 +502,7 @@ const Index = () => {
             ...(insertedLog?.[0] || newLog),
             morning_follow_up: [],
             midday_follow_up: [],
+            evening_follow_up: [],
             morning_complete: false,
             midday_complete: false,
             evening_complete: false,
@@ -497,10 +513,11 @@ const Index = () => {
           // Reset completed action items for new log
           setCompletedActionItems({ morning: [], midday: [] });
           
-          // Set schedule settings for this day
-          if (daySchedule) {
-            setTodayWorkMode(daySchedule.work_mode);
-            setTodayFocusAreas(daySchedule.focus_areas);
+          // Set schedule settings for this day using ref
+          const currentDaySchedule = weekScheduleRef.current[dayName];
+          if (currentDaySchedule) {
+            setTodayWorkMode(currentDaySchedule.work_mode);
+            setTodayFocusAreas(currentDaySchedule.focus_areas);
           }
           
           // Reset phase completion for new log
@@ -521,7 +538,7 @@ const Index = () => {
     };
 
     loadDailyLog();
-  }, [selectedDate, user, authChecked, weekSchedule]);
+  }, [selectedDate, user, authChecked]);
 
   // Refresh schedule data when page becomes visible (e.g., after navigating back from Schedule Manager)
   useEffect(() => {
