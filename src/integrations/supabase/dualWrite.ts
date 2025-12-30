@@ -2,7 +2,50 @@
 import { supabase } from './client'; // Lovable Cloud
 import { externalClient } from './externalClient'; // External shared DB
 
-// Generic dual-write insert
+// Known columns for each table in the EXTERNAL database
+// When external DB is missing columns, we strip them before writing
+const EXTERNAL_DB_COLUMNS: Record<string, string[]> = {
+  daily_logs: [
+    'id', 'user_id', 'date', 'situation', 'work_mode', 'energy_level',
+    'morning_insight', 'morning_follow_up', 'morning_complete',
+    'midday_insight', 'midday_adjustment', 'midday_follow_up', 'midday_complete',
+    'evening_insight', 'evening_follow_up', 'evening_complete',
+    'win', 'weakness', 'tomorrows_prep', 'completed_action_items',
+    'created_at', 'updated_at'
+  ],
+  schedules: [
+    'id', 'user_id', 'day_of_week', 'description', 'tags',
+    'created_at', 'updated_at'
+  ],
+  challenges: [
+    'id', 'user_id', 'name', 'description', 'is_active',
+    'created_at', 'updated_at'
+  ],
+  wisdom_library: [
+    'id', 'user_id', 'name', 'description', 'tag', 'is_active',
+    'created_at', 'updated_at'
+  ],
+  user_settings: [
+    'id', 'user_id', 'setting_key', 'setting_value',
+    'created_at', 'updated_at'
+  ]
+};
+
+// Strip unknown columns for external DB to prevent schema mismatch errors
+function stripUnknownColumns(table: string, data: any): any {
+  const knownColumns = EXTERNAL_DB_COLUMNS[table];
+  if (!knownColumns) return data; // Unknown table, pass through
+  
+  const result: any = {};
+  for (const key of Object.keys(data)) {
+    if (knownColumns.includes(key)) {
+      result[key] = data[key];
+    }
+  }
+  return result;
+}
+
+// Generic dual-write insert - Cloud first (primary), External second (best-effort)
 export async function dualInsert(
   table: string,
   data: any | any[]
@@ -10,61 +53,63 @@ export async function dualInsert(
   const dataArray = Array.isArray(data) ? data : [data];
   
   try {
-    // Write to external DB (primary)
-    const { data: externalData, error: externalError } = await (externalClient as any)
+    // Write to Cloud DB (primary - has latest schema)
+    const { data: cloudData, error: cloudError } = await (supabase as any)
       .from(table)
       .insert(dataArray)
       .select();
     
-    if (externalError) {
-      console.error(`External DB insert error (${table}):`, externalError);
-      throw externalError;
+    if (cloudError) {
+      console.error(`Cloud DB insert error (${table}):`, cloudError);
+      throw cloudError;
     }
     
-    // Write to Cloud DB (secondary, best-effort)
+    // Write to external DB (secondary, best-effort with column stripping)
     try {
-      await (supabase as any).from(table).insert(dataArray);
-    } catch (cloudError) {
-      console.warn(`Cloud DB insert warning (${table}):`, cloudError);
-      // Don't throw - Cloud is secondary
+      const strippedData = dataArray.map(item => stripUnknownColumns(table, item));
+      await (externalClient as any).from(table).insert(strippedData);
+    } catch (externalError) {
+      console.warn(`External DB insert warning (${table}):`, externalError);
+      // Don't throw - External is secondary
     }
     
-    return { data: externalData, error: null };
+    return { data: cloudData, error: null };
   } catch (error) {
     return { data: null, error };
   }
 }
 
-// Generic dual-write update
+// Generic dual-write update - Cloud first (primary), External second (best-effort)
 export async function dualUpdate(
   table: string,
   updates: any,
   match: { column: string; value: any }
 ) {
   try {
-    // Update external DB (primary)
-    const { data: externalData, error: externalError } = await (externalClient as any)
+    // Update Cloud DB (primary - has latest schema)
+    const { data: cloudData, error: cloudError } = await (supabase as any)
       .from(table)
       .update(updates)
       .eq(match.column, match.value)
       .select();
     
-    if (externalError) {
-      console.error(`External DB update error (${table}):`, externalError);
-      throw externalError;
+    if (cloudError) {
+      console.error(`Cloud DB update error (${table}):`, cloudError);
+      throw cloudError;
     }
     
-    // Update Cloud DB (secondary, best-effort)
+    // Update external DB (secondary, best-effort with column stripping)
     try {
-      await (supabase as any)
+      const strippedUpdates = stripUnknownColumns(table, updates);
+      await (externalClient as any)
         .from(table)
-        .update(updates)
+        .update(strippedUpdates)
         .eq(match.column, match.value);
-    } catch (cloudError) {
-      console.warn(`Cloud DB update warning (${table}):`, cloudError);
+    } catch (externalError) {
+      console.warn(`External DB update warning (${table}):`, externalError);
     }
     
-    return { data: externalData, error: null };
+    return { data: cloudData, error: null };
   } catch (error) {
     return { data: null, error };
   }
@@ -76,25 +121,25 @@ export async function dualDelete(
   match: { column: string; value: any }
 ) {
   try {
-    // Delete from external DB (primary)
-    const { error: externalError } = await (externalClient as any)
+    // Delete from Cloud DB (primary)
+    const { error: cloudError } = await (supabase as any)
       .from(table)
       .delete()
       .eq(match.column, match.value);
     
-    if (externalError) {
-      console.error(`External DB delete error (${table}):`, externalError);
-      throw externalError;
+    if (cloudError) {
+      console.error(`Cloud DB delete error (${table}):`, cloudError);
+      throw cloudError;
     }
     
-    // Delete from Cloud DB (secondary, best-effort)
+    // Delete from external DB (secondary, best-effort)
     try {
-      await (supabase as any)
+      await (externalClient as any)
         .from(table)
         .delete()
         .eq(match.column, match.value);
-    } catch (cloudError) {
-      console.warn(`Cloud DB delete warning (${table}):`, cloudError);
+    } catch (externalError) {
+      console.warn(`External DB delete warning (${table}):`, externalError);
     }
     
     return { error: null };
@@ -109,35 +154,35 @@ export async function dualDeleteWhere(
   conditions: Array<{ column: string; value: any; operator?: string }>
 ) {
   try {
-    // Build query for external DB
-    let externalQuery = (externalClient as any).from(table).delete();
+    // Build query for Cloud DB (primary)
+    let cloudQuery = (supabase as any).from(table).delete();
     conditions.forEach(({ column, value, operator = 'eq' }) => {
       if (operator === 'neq') {
-        externalQuery = externalQuery.neq(column, value);
+        cloudQuery = cloudQuery.neq(column, value);
       } else {
-        externalQuery = externalQuery.eq(column, value);
+        cloudQuery = cloudQuery.eq(column, value);
       }
     });
     
-    const { error: externalError } = await externalQuery;
-    if (externalError) {
-      console.error(`External DB delete error (${table}):`, externalError);
-      throw externalError;
+    const { error: cloudError } = await cloudQuery;
+    if (cloudError) {
+      console.error(`Cloud DB delete error (${table}):`, cloudError);
+      throw cloudError;
     }
     
-    // Build query for Cloud DB (best-effort)
+    // Build query for external DB (best-effort)
     try {
-      let cloudQuery = (supabase as any).from(table).delete();
+      let externalQuery = (externalClient as any).from(table).delete();
       conditions.forEach(({ column, value, operator = 'eq' }) => {
         if (operator === 'neq') {
-          cloudQuery = cloudQuery.neq(column, value);
+          externalQuery = externalQuery.neq(column, value);
         } else {
-          cloudQuery = cloudQuery.eq(column, value);
+          externalQuery = externalQuery.eq(column, value);
         }
       });
-      await cloudQuery;
-    } catch (cloudError) {
-      console.warn(`Cloud DB delete warning (${table}):`, cloudError);
+      await externalQuery;
+    } catch (externalError) {
+      console.warn(`External DB delete warning (${table}):`, externalError);
     }
     
     return { error: null };
