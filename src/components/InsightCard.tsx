@@ -201,18 +201,18 @@ const InsightCard = ({ insight }: InsightCardProps) => {
                 </div>
               );
 
-              return rec.url ? (
+              const searchUrl = rec.url || `https://www.google.com/search?q=${encodeURIComponent(rec.title)}`;
+              
+              return (
                 <a 
                   key={index} 
-                  href={rec.url} 
+                  href={searchUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="block"
                 >
                   {content}
                 </a>
-              ) : (
-                <div key={index}>{content}</div>
               );
             })}
           </div>
