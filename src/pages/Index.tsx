@@ -767,6 +767,8 @@ const Index = () => {
   const handleSituationChange = useCallback(
     (value: string) => {
       setSituationText(value);
+      // Immediately update dailyLog so generateDailyInsight has the current value
+      setDailyLog(prev => prev ? { ...prev, situation: value } : prev);
 
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -782,6 +784,8 @@ const Index = () => {
   const handleMiddayAdjustmentChange = useCallback(
     (value: string) => {
       setMiddayAdjustmentText(value);
+      // Immediately update dailyLog so generateDailyInsight has the current value
+      setDailyLog(prev => prev ? { ...prev, midday_adjustment: value } : prev);
 
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
