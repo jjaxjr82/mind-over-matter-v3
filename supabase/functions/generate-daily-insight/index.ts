@@ -6,6 +6,68 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Function to search for a resource URL using Google Custom Search API
+async function searchForResourceUrl(title: string, type: string): Promise<string | null> {
+  const GOOGLE_API_KEY = Deno.env.get('GOOGLE_SEARCH_API_KEY');
+  const GOOGLE_CX = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID');
+  
+  if (!GOOGLE_API_KEY || !GOOGLE_CX) {
+    console.log('Google Search API not configured, skipping URL lookup');
+    return null;
+  }
+
+  try {
+    // Build search query based on resource type
+    const searchQuery = type === 'podcast' 
+      ? `${title} podcast episode`
+      : `${title} article`;
+    
+    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&q=${encodeURIComponent(searchQuery)}&num=1`;
+    
+    console.log(`Searching for: ${searchQuery}`);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error('Google Search API error:', response.status, await response.text());
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data.items && data.items.length > 0) {
+      const resultUrl = data.items[0].link;
+      console.log(`Found URL for "${title}": ${resultUrl}`);
+      return resultUrl;
+    }
+    
+    console.log(`No results found for: ${title}`);
+    return null;
+  } catch (error) {
+    console.error('Error searching for resource URL:', error);
+    return null;
+  }
+}
+
+// Function to enrich recommendations with real URLs
+async function enrichRecommendationsWithUrls(recommendations: any[]): Promise<any[]> {
+  if (!recommendations || !Array.isArray(recommendations)) {
+    return recommendations;
+  }
+  
+  const enrichedRecommendations = await Promise.all(
+    recommendations.map(async (rec) => {
+      const url = await searchForResourceUrl(rec.title, rec.type);
+      return {
+        ...rec,
+        url: url || null
+      };
+    })
+  );
+  
+  return enrichedRecommendations;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -72,7 +134,7 @@ Generate a structured daily insight in JSON format with these exact fields:
   "recommendations": [
     {
       "type": "article or podcast",
-      "title": "Specific title of real article/podcast",
+      "title": "Specific title of real article/podcast that EXISTS on the internet - be specific and accurate",
       "description": "1-2 sentences explaining why this is relevant to their specific situation and context",
       "estimatedTime": "5 min read or 30 min listen"
     }
@@ -84,10 +146,10 @@ Recommendations Guidelines:
 - NEVER recommend full books - the user wants quick wins, not reading lists
 - Article recommendations: 5-15 minute reads MAX (blog posts, essays, magazine articles)
 - Podcast recommendations: 20-30 minute episodes MAX (specific episodes, not entire shows)
+- IMPORTANT: Recommend REAL, EXISTING content that can be found online - be accurate with titles
 - If major situation present: Prioritize SHORT resources for that life event (10-min divorce recovery article, 20-min grief podcast episode)
 - If no major situation: Base on challenges and wisdom sources, but keep it BRIEF
 - Consider their work mode and energy level - they need bite-sized content
-- Suggest real, specific content (not "read Meditations" but "read this 8-minute Daily Stoic article on...")
 - Each recommendation must be directly relevant and actually consumable today
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
@@ -127,7 +189,7 @@ Generate a JSON response with these exact fields:
   "recommendations": [
     {
       "type": "article or podcast",
-      "title": "Specific title",
+      "title": "Specific title of REAL content that EXISTS online",
       "description": "Why this helps with their afternoon focus (relate to major situation if present)",
       "estimatedTime": "time estimate"
     }
@@ -141,6 +203,7 @@ Guidelines:
 - Help them refocus and prioritize for the remaining day
 - Reference morning action items if relevant
 - Keep tone supportive and energizing (but grounded if major situation present)
+- IMPORTANT: Recommend REAL, EXISTING content - be accurate with titles
 - Provide 1-2 SHORT recommendations for afternoon listening/reading to support momentum and focus (5-15 min reads or 20-30 min listens MAX, prioritize situation-relevant resources if major situation present)
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
@@ -177,7 +240,7 @@ Generate a JSON response with these exact fields:
   "recommendations": [
     {
       "type": "article or podcast",
-      "title": "Specific title of evening-friendly content (calming, reflective)",
+      "title": "Specific title of REAL, EXISTING evening-friendly content (calming, reflective)",
       "description": "Why this supports evening wind-down and tomorrow's preparation (relate to major situation if present)",
       "estimatedTime": "5-10 min read or 15-20 min listen"
     }
@@ -190,11 +253,14 @@ Guidelines:
 - If major situation present: Be deeply compassionate, acknowledge the difficulty of showing up each day
 - Help them feel closure on today and hopeful about tomorrow
 - Keep tone warm, reflective, and restorative
+- IMPORTANT: Recommend REAL, EXISTING content - be accurate with titles
 - Provide 1-2 SHORT evening-appropriate recommendations for reflection or calm (5-10 min reads or 15-20 min listens MAX, prioritize situation-relevant resources if major situation present)
 - Focus on rest, recovery, and gentle preparation rather than more action
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
     }
+
+    console.log(`Generating ${phase} insight...`);
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -253,6 +319,13 @@ Return ONLY valid JSON, no markdown, no code blocks.`;
     }
     
     const parsedInsight = JSON.parse(cleanContent);
+    
+    // Enrich recommendations with real URLs from Google Search
+    if (parsedInsight.recommendations) {
+      console.log('Enriching recommendations with real URLs...');
+      parsedInsight.recommendations = await enrichRecommendationsWithUrls(parsedInsight.recommendations);
+      console.log('Recommendations enriched:', JSON.stringify(parsedInsight.recommendations));
+    }
     
     return new Response(
       JSON.stringify(parsedInsight), 
