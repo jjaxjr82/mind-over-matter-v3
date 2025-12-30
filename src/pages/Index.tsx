@@ -66,6 +66,8 @@ interface DailyLog {
   id?: string;
   date: string;
   situation: string;
+  work_mode?: string;
+  energy_level?: string;
   morning_insight: any;
   morning_follow_up: any[];
   midday_insight?: any;
@@ -918,13 +920,24 @@ const Index = () => {
 
       const regenerationId = Date.now();
       
+      // Use dailyLog overrides if user has set them for today, otherwise use schedule defaults
+      const effectiveWorkMode = dailyLog?.work_mode || freshWorkMode;
+      const effectiveEnergyLevel = dailyLog?.energy_level || freshEnergyLevel;
+      
+      console.log('📋 Using effective context:', {
+        workModeSource: dailyLog?.work_mode ? 'dailyLog (user override)' : 'schedule (default)',
+        effectiveWorkMode,
+        effectiveEnergyLevel,
+        situation: dailyLog?.situation
+      });
+      
       const requestBody: any = {
         phase,
         challenges: activeChallenges || "None",
         wisdomSources: activeWisdomSources || "General wisdom",
         schedule: todaySchedule?.description || "No schedule set",
-        workMode: freshWorkMode,
-        energyLevel: freshEnergyLevel,
+        workMode: effectiveWorkMode,
+        energyLevel: effectiveEnergyLevel,
         focusAreas: freshFocusAreas.join(", ") || "None",
         situation: dailyLog?.situation || "None",
         regenerationId, // Force unique generation each time
