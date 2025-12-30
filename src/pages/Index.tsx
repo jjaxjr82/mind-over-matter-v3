@@ -357,8 +357,8 @@ const Index = () => {
         const now = getEasternDate();
         const { start: weekStart, end: weekEnd } = getWeekBoundaries(now);
 
-        // Read from Cloud (has latest schema) - use supabase instead of externalClient
-        const { data: weekLogsData, error: weekLogsError } = await supabase
+        // Read from external DB (has auth session)
+        const { data: weekLogsData, error: weekLogsError } = await externalClient
           .from("daily_logs")
           .select("*")
           .eq("user_id", user.id)
@@ -418,8 +418,8 @@ const Index = () => {
         const dayName = getEasternDayName(selectedDate);
         const daySchedule = weekScheduleRef.current[dayName];
 
-        // Read from Cloud (has latest schema) - use supabase instead of externalClient
-        const { data: logData, error: logError } = await supabase
+        // Read from external DB (has auth session)
+        const { data: logData, error: logError } = await externalClient
           .from("daily_logs")
           .select("*")
           .eq("user_id", user.id)
